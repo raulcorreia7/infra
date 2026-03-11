@@ -1,0 +1,43 @@
+services:
+  headscale:
+    image: docker.io/headscale/headscale:0.28.0
+    container_name: headscale
+    restart: unless-stopped
+    command: serve
+    environment:
+      TZ: ${TZ}
+    labels:
+      me.tale.headplane.target: "headscale"
+    networks:
+      - edge
+    volumes:
+      - ./config/headscale/config.yaml:/etc/headscale/config.yaml:ro
+      - ./data/headscale:/var/lib/headscale
+    healthcheck:
+      test: ["CMD", "headscale", "health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+
+  headplane:
+    image: ghcr.io/tale/headplane:0.6.2
+    container_name: headplane
+    restart: unless-stopped
+    depends_on:
+      headscale:
+        condition: service_healthy
+    environment:
+      TZ: ${TZ}
+    networks:
+      - edge
+    volumes:
+      - ./config/headscale/config.yaml:/etc/headscale/config.yaml
+      - ./config/headplane/config.yaml:/etc/headplane/config.yaml:ro
+      - ./data/headplane:/var/lib/headplane
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+networks:
+  edge:
+    external: true
+    name: ${EDGE_NETWORK}

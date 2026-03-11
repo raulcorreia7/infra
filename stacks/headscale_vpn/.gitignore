@@ -1,0 +1,9 @@
+config/headscale/config.yaml
+config/headplane/config.yaml
+config/policy.yaml
+
+data/headscale/**
+data/headplane/**
+!data/.gitkeep
+!data/headscale/.gitkeep
+!data/headplane/.gitkeep
