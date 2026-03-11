@@ -9,7 +9,6 @@ ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 HOST_NAME="${1:-}"
 HOST_DIR=""
 ENV_FILE=""
-STACKS_FILE=""
 declare -a ENABLED_STACKS=()
 
 usage() {
@@ -20,15 +19,15 @@ Start enabled stacks for one host.
 EOF
 }
 
-run_post_hook() {
+run_after_up_hook() {
 	local stack_name="$1"
 	local hook_path=""
 
-	hook_path="$(stack_dir "$stack_name")/post.sh"
+	hook_path="$(stack_dir "$stack_name")/after-up.sh"
 
 	[[ -x "$hook_path" ]] || return 0
 
-	printf 'running %s post hook\n' "$stack_name"
+	printf 'running %s after-up hook\n' "$stack_name"
 	"$hook_path"
 }
 
@@ -36,7 +35,7 @@ start_stack() {
 	local stack_name="$1"
 	printf 'starting %s\n' "$stack_name"
 	run_compose "$stack_name" up -d
-	run_post_hook "$stack_name"
+	run_after_up_hook "$stack_name"
 }
 
 main() {

@@ -2,7 +2,7 @@
 
 This stack runs a private Headscale control plane with the Headplane web UI.
 Both containers join an existing edge network and expect Caddy to terminate TLS
-and route traffic on the hostname from `hosts/<host>/.env`, so the compose
+and route traffic on the hostname from `stacks/<host>/.env`, so the compose
 stack does not publish any public ports.
 
 Rule of thumb: keep these services internal and access them through the reverse
@@ -12,7 +12,7 @@ proxy stack. Direct port publishing is only a temporary testing escape hatch.
 
 - `compose.yaml` for `headscale` and `headplane`
 - Host-driven config templates rendered during setup
-- `post.sh` to seed the current default users after the stack starts
+- `after-up.sh` to optionally create local Headscale users after the stack starts
 - Empty data directories for persistent application state
 - A local `.gitignore` for runtime data and real config files
 - Stable container names so `docker exec headscale ...` and `docker exec headplane ...` work as expected on the host
@@ -30,13 +30,16 @@ This stack uses these host env values when rendering:
 
 - `PUBLIC_FQDN`
 - `TAILNET_DOMAIN`
+- `HOME_DOMAIN`
+- `HOME_DNS_RESOLVER`
+- `HEADSCALE_SEED_USERS` (optional comma-separated user list)
 - `HEADPLANE_COOKIE_SECRET` (optional; generated on first render if unset)
 
 If you later move Headscale policy storage to a file, setup also copies the
 starter file below when it is missing:
 
 ```bash
-cp stacks/headscale_vpn/config/policy.example.yaml stacks/headscale_vpn/config/policy.yaml
+cp stacks/<host>/headscale_vpn/config/policy.example.yaml stacks/<host>/headscale_vpn/config/policy.yaml
 ```
 
 Important:
@@ -55,7 +58,7 @@ Example:
 
 ```bash
 export EDGE_NETWORK=edge
-docker compose -f stacks/headscale_vpn/compose.yaml up -d
+docker compose -f stacks/<host>/headscale_vpn/compose.yaml up -d
 ```
 
 ## Reverse proxy notes
@@ -68,18 +71,18 @@ docker compose -f stacks/headscale_vpn/compose.yaml up -d
 
 - MagicDNS is enabled.
 - The tailnet base domain comes from `TAILNET_DOMAIN`.
-- The home domain is `home.arpa`.
+- The home domain comes from `HOME_DOMAIN`.
 - Global resolvers are `9.9.9.9`, `1.1.1.1`, and `1.0.0.1`.
-- Split DNS sends `home.arpa` to `192.168.100.1`.
-- Search domains include `home.arpa`.
-- `post.sh` seeds the users `gil` and `raul` after `bash bin/up.sh cerberus`.
+- Split DNS sends `HOME_DOMAIN` to `HOME_DNS_RESOLVER`.
+- Search domains include `HOME_DOMAIN`.
+- `after-up.sh` only creates users listed in `HEADSCALE_SEED_USERS`.
 
 ## Generate a Headscale API key
 
 Use this for Headplane API-key login or other administrative tooling:
 
 ```bash
-docker compose -f stacks/headscale_vpn/compose.yaml exec headscale \
+docker compose -f stacks/<host>/headscale_vpn/compose.yaml exec headscale \
   headscale apikeys create --expiration 90d
 ```
 
@@ -88,14 +91,14 @@ docker compose -f stacks/headscale_vpn/compose.yaml exec headscale \
 Create a user:
 
 ```bash
-docker compose -f stacks/headscale_vpn/compose.yaml exec headscale \
+docker compose -f stacks/<host>/headscale_vpn/compose.yaml exec headscale \
   headscale users create alice
 ```
 
 Create a reusable pre-auth key:
 
 ```bash
-docker compose -f stacks/headscale_vpn/compose.yaml exec headscale \
+docker compose -f stacks/<host>/headscale_vpn/compose.yaml exec headscale \
   headscale preauthkeys create --user alice --reusable --expiration 24h
 ```
 
@@ -109,21 +112,21 @@ Interactive enrollment is also possible:
 
 ```bash
 tailscale up --login-server https://<PUBLIC_FQDN>
-docker compose -f stacks/headscale_vpn/compose.yaml exec headscale \
+docker compose -f stacks/<host>/headscale_vpn/compose.yaml exec headscale \
   headscale nodes register --user alice --key <machine-key>
 ```
 
 ## Data locations
 
-- Headscale data lives in `stacks/headscale_vpn/data/headscale`
-- Headplane data lives in `stacks/headscale_vpn/data/headplane`
+- Headscale data lives in `stacks/<host>/headscale_vpn/data/headscale`
+- Headplane data lives in `stacks/<host>/headscale_vpn/data/headplane`
 
 These directories hold persistent runtime state and are ignored by the stack's
 local `.gitignore`.
 
 ## Policy placeholder
 
-`stacks/headscale_vpn/config/policy.example.yaml` is a small starter file for
+`stacks/<host>/headscale_vpn/config/policy.example.yaml` is a small starter file for
 future ACL and tag work. The example Headscale config keeps policy storage in
 database mode by default so you can bring the stack up first and switch to a
 file-backed policy later if you want it.

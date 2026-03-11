@@ -9,7 +9,6 @@ ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 HOST_NAME="${1:-cerberus}"
 HOST_DIR=""
 ENV_FILE=""
-STACKS_FILE=""
 declare -a ENABLED_STACKS=()
 
 TEMP_DIR=""
@@ -32,7 +31,7 @@ load_validation_env() {
 }
 
 validate_shell_syntax() {
-	mapfile -t shell_files < <(git -C "$ROOT_DIR" ls-files --cached --others --exclude-standard '*.sh')
+	mapfile -t shell_files < <(list_existing_shell_files)
 	[[ "${#shell_files[@]}" -gt 0 ]] || return
 	bash -n "${shell_files[@]}"
 }
@@ -65,7 +64,7 @@ validate_compose_files() {
 }
 
 validate_caddy_config() {
-	local rendered_caddy="${TEMP_DIR}/stacks/reverse_proxy/config/Caddyfile"
+	local rendered_caddy="${TEMP_DIR}/stacks/${HOST_NAME}/reverse_proxy/config/Caddyfile"
 	[[ -f "$rendered_caddy" ]] || return
 
 	docker run --rm \
@@ -75,7 +74,7 @@ validate_caddy_config() {
 }
 
 validate_headscale_config() {
-	local rendered_config="${TEMP_DIR}/stacks/headscale_vpn/config/headscale/config.yaml"
+	local rendered_config="${TEMP_DIR}/stacks/${HOST_NAME}/headscale_vpn/config/headscale/config.yaml"
 	[[ -f "$rendered_config" ]] || return
 
 	docker run --rm \

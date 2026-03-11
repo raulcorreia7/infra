@@ -4,12 +4,13 @@
 .DS_Store
 
 # Host-local environment files
-hosts/*/.env
-!hosts/*/.env.example
+stacks/*/.env
+!stacks/*/.env.example
 
 # Generated stack state
 stacks/**/data/**
 !stacks/**/data/.gitkeep
+!stacks/**/data/**/
 !stacks/**/data/**/.gitkeep
 
 # Copied local config

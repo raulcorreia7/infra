@@ -1,112 +1,97 @@
 # Homelab
 
-Small, public edge on the VPS. Everything else stays inside the homelab or
-behind Caddy unless there is a short-lived testing reason not to.
+Small public edge on `cerberus`. Internal services stay behind Caddy by
+default.
 
-## Big Picture
-
-```text
-                          .------------------------.
-                          |        Internet        |
-                          '-----------+------------'
-                                      |
-                          .-----------v------------.
-                          |      Cloudflare DNS    |
-                          |     raulcorreia.dev    |
-                          '-----------+------------'
-                                      |
-                       cerberus.raulcorreia.dev / edge
-                                      |
-               .----------------------v-----------------------.
-               |                  cerberus                    |
-               |                    VPS                       |
-               |                                             |
-               |  .----------------.    .-----------------.  |
-               |  | Caddy          |--->| Headscale       |  |
-               |  | reverse_proxy  |    | control plane   |  |
-               |  '--------+-------'    '---------+-------'  |
-               |           |                        ^         |
-               |           '-------> Headplane ----'         |
-               '----------------------+----------------------'
-                                      |
-                            Tailnet / admin clients
-
-
- .------------------------.   .------------------------.   .----------------------.
- | ISP router / upstream  |-->| hermes / pfSense       |-->| access point / LAN   |
- | 192.168.178.1/24       |   | 192.168.100.1/24       |   '----------+-----------'
- '------------------------'   '-----------+------------'              |
-                                                |                     |
-              .---------------------------------+---------------------+----------------.
-              |                                 |                     |                |
-      .-------v-------.                 .-------v-------.     .-------v-------. .------v------.
-      | chronos       |                 | athena        |     | talos         | | laptops /   |
-      | TrueNAS SCALE |                 | Proxmox       |     | desktop       | | phone       |
-      '---------------'                 '---------------'     '---------------' '-------------'
-```
-
-## Default Rule
+## Rule
 
 ```text
 public traffic -> Caddy -> internal service
 ```
 
-- `cerberus` is the public edge.
-- `reverse_proxy` is the normal entrypoint.
-- `headscale` and `headplane` stay internal by default.
-- Direct ports are a testing shortcut, not the normal shape.
-
-## Cerberus
+## Public Edge
 
 ```text
-80/443
-  -> Caddy
-     -> /admin  -> Headplane
-     -> /       -> Headscale
-
-Docker network: edge
-Repo source of truth: hosts/cerberus/.env
-Rendered local config: stacks/*/config/*
-Runtime state: stacks/*/data/*
+                         .----------------------.
+                         |       Internet       |
+                         '----------+-----------'
+                                    |
+                         .----------v-----------.
+                         |    Cloudflare DNS    |
+                         |   raulcorreia.dev    |
+                         '----------+-----------'
+                                    |
+                    cerberus.raulcorreia.dev / 80,443
+                                    |
+          .-------------------------v-------------------------.
+          |                    cerberus VPS                   |
+          |                                                   |
+          |   .-----------------.      .-------------------.  |
+          |   | reverse_proxy   |----->| headscale_vpn     |  |
+          |   | Caddy           |      | Headscale         |  |
+          |   |                 |----->| Headplane (/admin)|  |
+          |   '-----------------'      '-------------------'  |
+          '---------------------------------------------------'
+                                    |
+                             tailnet clients
 ```
 
-## Homelab
+## Homelab Network
 
 ```text
-ISP
-  -> ISP router / upstream  (192.168.178.1/24)
-    -> hermes / pfSense     (192.168.100.1/24)
-    -> access point
-    -> chronos  (TrueNAS SCALE)
-    -> athena   (Proxmox / containers)
-    -> talos    (desktop)
-    -> laptops
-    -> phone
+ .------------------------.     .------------------------.
+ | ISP router / upstream  |---->| hermes / pfSense       |
+ | 192.168.178.1/24       |     | 192.168.100.1/24       |
+ '------------------------'     '-----------+------------'
+                                              |
+                    .----------+---------------+---------------+-------------.
+                    |          |               |               |             |
+            .-------v-------. .-v-----------. .-v---------. .--v----------. .-v----------.
+            | chronos       | | athena      | | talos     | | laptops /   | | access     |
+            | TrueNAS SCALE | | Proxmox     | | desktop   | | phone       | | point      |
+            '---------------' '-------------' '-----------' '-------------' '------------'
 ```
 
-Home domain:
+## Where Things Live
 
 ```text
-home.arpa
+stacks/cerberus/.env                source of truth for cerberus values
+
+stacks/cerberus/reverse_proxy/compose.yaml   Caddy stack
+stacks/cerberus/reverse_proxy/config/        rendered Caddyfile
+stacks/cerberus/reverse_proxy/data/          Caddy state
+
+stacks/cerberus/headscale_vpn/compose.yaml   Headscale + Headplane stack
+stacks/cerberus/headscale_vpn/config/        rendered app config
+stacks/cerberus/headscale_vpn/data/          Headscale and Headplane state
+```
+
+## Cerberus Routing
+
+```text
+80/443  -> Caddy
+          /admin  -> Headplane
+          /       -> Headscale
+
+network  -> edge
 ```
 
 ## Tailnet Defaults
 
 ```text
-MagicDNS       enabled
-Base domain    tailnet.cerberus.raulcorreia.dev
-Resolvers      9.9.9.9, 1.1.1.1, 1.0.0.1
-Home domain    home.arpa
-Split DNS      home.arpa -> 192.168.100.1
-Search domain  home.arpa
+base domain    tailnet.cerberus.raulcorreia.dev
+home domain    home.arpa
+resolvers      9.9.9.9, 1.1.1.1, 1.0.0.1
+split DNS      home.arpa -> 192.168.100.1
+search domain  home.arpa
+magic DNS      enabled
 ```
 
-## Network Notes
+## Notes
 
 ```text
-Firewall / router   hermes
-LAN gateway         192.168.100.1/24
-ISP upstream        192.168.178.1/24
-Home domain         home.arpa
-Public edge         cerberus
+public edge     cerberus
+firewall        hermes
+lan gateway     192.168.100.1/24
+isp upstream    192.168.178.1/24
 ```

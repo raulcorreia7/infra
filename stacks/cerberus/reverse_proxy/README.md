@@ -9,7 +9,8 @@ network.
 
 - `compose.yaml` starts the Caddy container.
 - `config/Caddyfile.template` is the tracked template rendered during setup.
-- `data/` stores Caddy runtime state, including ACME account data and issued certificates.
+- `data/caddy/` stores ACME account data and issued certificates.
+- `data/config/` stores Caddy's persisted config state.
 
 ## Setup
 
@@ -36,8 +37,11 @@ local testing.
 ## Storage Ownership
 
 Caddy owns both public TLS listeners and the certificate material stored in
-`stacks/reverse_proxy/data`. The container also persists `/config` in the
-`caddy_config` Docker volume for Caddy's saved configuration state.
+`stacks/<host>/reverse_proxy/data/caddy`. Caddy's saved config state lives in
+`stacks/<host>/reverse_proxy/data/config`.
+
+This stack uses bind mounts for both paths so state stays visible, portable,
+and easy to migrate.
 
 ## Extending Later
 

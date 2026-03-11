@@ -9,7 +9,6 @@ ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 HOST_NAME="${1:-}"
 HOST_DIR=""
 ENV_FILE=""
-STACKS_FILE=""
 declare -a ENABLED_STACKS=()
 
 usage() {
@@ -64,6 +63,11 @@ ensure_stack_directories() {
 		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/headscale"
 		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/headplane"
 		;;
+	reverse_proxy)
+		mkdir -p "$stack_directory/data/caddy" "$stack_directory/data/config"
+		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/caddy"
+		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/config"
+		;;
 	*)
 		mkdir -p "$stack_directory/data"
 		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data"
@@ -73,9 +77,11 @@ ensure_stack_directories() {
 
 prepare_stack() {
 	local stack_name="$1"
-	local stack_directory="${ROOT_DIR}/stacks/${stack_name}"
+	local stack_directory=""
 	local template_file=""
 	local example_file=""
+
+	stack_directory="$(stack_dir "$stack_name")"
 
 	[[ -d "$stack_directory" ]] || fail "missing stack directory: ${stack_directory}"
 	ensure_stack_directories "$stack_name" "$stack_directory"

@@ -10,8 +10,8 @@ services:
       - "443:443"
     volumes:
       - ./config/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./data:/data
-      - caddy_config:/config
+      - ./data/caddy:/data
+      - ./data/config:/config
     networks:
       - edge
 
@@ -19,6 +19,3 @@ networks:
   edge:
     external: true
     name: ${EDGE_NETWORK}
-
-volumes:
-  caddy_config:

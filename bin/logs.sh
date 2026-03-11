@@ -10,7 +10,6 @@ HOST_NAME="${1:-}"
 STACK_FILTER="${2:-}"
 HOST_DIR=""
 ENV_FILE=""
-STACKS_FILE=""
 declare -a ENABLED_STACKS=()
 declare -a LOG_PIDS=()
 

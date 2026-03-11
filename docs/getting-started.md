@@ -4,30 +4,33 @@
 
 ```text
 host env -> setup -> rendered local config -> up -> verify
+                                     \-> teardown
 ```
 
 ## Bring Up A Host
 
-1. Copy `hosts/<host>/.env.example` to `hosts/<host>/.env`.
+1. Copy `stacks/<host>/.env.example` to `stacks/<host>/.env`.
 2. Fill in the host values.
-3. Enable stacks in `hosts/<host>/stacks.txt`.
+3. Add or remove stack folders under `stacks/<host>/`.
 4. Run `bash bin/setup.sh <host>`.
 5. Review the rendered local config files.
 6. Run `bash bin/up.sh <host>`.
 7. Run `bash bin/verify.sh <host>`.
+8. Run `bash bin/teardown.sh <host>` when you want to remove stack resources.
 
 ## Host Model
 
-- `hosts/<host>/.env` is the source of truth for host-specific values.
-- `hosts/<host>/stacks.txt` is the enabled stack list.
-- `stacks/*/*.template*` files render once when missing.
-- `stacks/*/*.example*` files copy once when missing.
+- `stacks/<host>/.env` is the source of truth for host-specific values.
+- `stacks/<host>/<stack>/compose.yaml` marks a stack as enabled for that host.
+- `stacks/<host>/<stack>/*.template*` files render once when missing.
+- `stacks/<host>/<stack>/*.example*` files copy once when missing.
 
 ## Rendering Rules
 
 - Existing local files are never overwritten.
-- `HEADPLANE_COOKIE_SECRET` can be set in `hosts/<host>/.env`.
+- `HEADPLANE_COOKIE_SECRET` can be set in `stacks/<host>/.env`.
 - If that secret is unset, setup generates one on first render.
+- `HOME_DOMAIN` and `HOME_DNS_RESOLVER` drive the Tailnet split-DNS defaults.
 
 ## Current Active Host
 
@@ -36,19 +39,20 @@ host env -> setup -> rendered local config -> up -> verify
 - `reverse_proxy`
 - `headscale_vpn`
 
-The domain defaults already live in `hosts/cerberus/.env.example`.
+The domain defaults already live in `stacks/cerberus/.env.example`.
 
 ## Add A Host
 
-1. Create `hosts/<host>/`.
-2. Add `hosts/<host>/.env.example`.
-3. Add `hosts/<host>/stacks.txt`.
+1. Create `stacks/<host>/`.
+2. Add `stacks/<host>/.env.example`.
+3. Add one folder per enabled stack under `stacks/<host>/`.
 4. Copy the example env to a local `.env`.
 5. Run `bash bin/setup.sh <host>`.
 
-## Proxmox Notes
+## Athena Notes
 
-The current Proxmox placeholder assumes an Alpine LXC plus Tailscale.
+`athena` is the current Proxmox placeholder and assumes an Alpine LXC plus
+Tailscale.
 
 ```bash
 var_cpu="2" var_disk="2" bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/ct/alpine.sh)"

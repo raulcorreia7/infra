@@ -1,7 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SEED_USERS=("gil" "raul")
+SEED_USERS_RAW="${HEADSCALE_SEED_USERS:-}"
+declare -a SEED_USERS=()
+
+load_seed_users() {
+	local entry=""
+
+	[[ -n "$SEED_USERS_RAW" ]] || return
+
+	IFS=',' read -r -a SEED_USERS <<<"$SEED_USERS_RAW"
+
+	for entry_index in "${!SEED_USERS[@]}"; do
+		entry="${SEED_USERS[entry_index]}"
+		entry="${entry#${entry%%[![:space:]]*}}"
+		entry="${entry%${entry##*[![:space:]]}}"
+		SEED_USERS[entry_index]="$entry"
+	done
+}
 
 wait_for_headscale() {
 	local attempt=0
@@ -39,6 +55,13 @@ ensure_user() {
 
 main() {
 	local user_name=""
+
+	load_seed_users
+
+	if [[ "${#SEED_USERS[@]}" -eq 0 ]]; then
+		printf 'no seed users configured\n'
+		return
+	fi
 
 	wait_for_headscale
 

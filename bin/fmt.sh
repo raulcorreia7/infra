@@ -21,7 +21,7 @@ run_shfmt() {
 
 main() {
 	require_command docker
-	mapfile -t shell_files < <(git -C "$ROOT_DIR" ls-files --cached --others --exclude-standard '*.sh')
+	mapfile -t shell_files < <(list_existing_shell_files)
 
 	if [[ "${#shell_files[@]}" -eq 0 ]]; then
 		printf 'no shell files to format\n'

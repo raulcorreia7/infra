@@ -9,7 +9,6 @@ ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 HOST_NAME="${1:-}"
 HOST_DIR=""
 ENV_FILE=""
-STACKS_FILE=""
 declare -a ENABLED_STACKS=()
 
 usage() {

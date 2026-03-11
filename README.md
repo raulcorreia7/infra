@@ -5,8 +5,8 @@ rendered config.
 
 ## What This Repo Is
 
-- One folder per host
-- One folder per stack
+- One top-level folder per host under `stacks/`
+- One folder per service stack inside each host
 - `cerberus` is the current public edge
 - `reverse_proxy` fronts public traffic
 - `headscale_vpn` runs Headscale + Headplane
@@ -25,6 +25,12 @@ Stop everything:
 bash bin/down.sh cerberus
 ```
 
+Remove stack resources and the shared edge network when unused:
+
+```bash
+bash bin/teardown.sh cerberus
+```
+
 ## Rule Of Thumb
 
 ```text
@@ -39,6 +45,7 @@ testing.
 - `bash bin/setup.sh <host>` bootstrap host config and runtime directories
 - `bash bin/up.sh <host>` start enabled stacks
 - `bash bin/down.sh <host>` stop enabled stacks
+- `bash bin/teardown.sh <host>` remove stack resources and clean up unused host network state
 - `bash bin/logs.sh <host> [stack]` inspect logs
 - `bash bin/verify.sh <host>` run health checks
 - `bash bin/fmt.sh` format shell scripts
@@ -50,5 +57,5 @@ testing.
 - `docs/index.md` docs map
 - `docs/getting-started.md` setup flow, host model, and config rendering
 - `docs/homelab.md` homelab and network topology
-- `stacks/headscale_vpn/README.md` Headscale and Headplane notes
-- `stacks/reverse_proxy/README.md` Caddy and routing notes
+- `stacks/cerberus/headscale_vpn/README.md` Headscale and Headplane notes
+- `stacks/cerberus/reverse_proxy/README.md` Caddy and routing notes

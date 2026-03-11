@@ -18,17 +18,24 @@ require_docker_compose() {
 	docker compose version >/dev/null 2>&1 || fail "docker compose is required"
 }
 
+list_existing_shell_files() {
+	local shell_file=""
+
+	while IFS= read -r shell_file; do
+		[[ -f "${ROOT_DIR}/${shell_file}" ]] || continue
+		printf '%s\n' "$shell_file"
+	done < <(git -C "$ROOT_DIR" ls-files --cached --others --exclude-standard '*.sh')
+}
+
 require_host_name() {
 	[[ -n "${HOST_NAME:-}" ]] || fail "host name is required"
 }
 
 set_host_paths() {
-	HOST_DIR="${ROOT_DIR}/hosts/${HOST_NAME}"
+	HOST_DIR="${ROOT_DIR}/stacks/${HOST_NAME}"
 	ENV_FILE="${HOST_DIR}/.env"
-	STACKS_FILE="${HOST_DIR}/stacks.txt"
 
 	[[ -d "$HOST_DIR" ]] || fail "unknown host '${HOST_NAME}' (missing ${HOST_DIR})"
-	[[ -f "$STACKS_FILE" ]] || fail "missing stacks file: ${STACKS_FILE}"
 }
 
 require_local_env_file() {
@@ -43,22 +50,19 @@ load_host_env() {
 }
 
 load_enabled_stacks() {
-	local raw_line=""
+	local compose_file=""
 	local stack_name=""
 
 	ENABLED_STACKS=()
 
-	while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
-		stack_name="${raw_line%%#*}"
-		stack_name="$(trim "$stack_name")"
-
-		[[ -n "$stack_name" ]] || continue
+	while IFS= read -r compose_file; do
+		stack_name="$(basename -- "$(dirname -- "$compose_file")")"
 		ENABLED_STACKS+=("$stack_name")
-	done <"$STACKS_FILE"
+	done < <(find "$HOST_DIR" -mindepth 2 -maxdepth 2 -type f -name 'compose.yaml' | sort)
 }
 
 stack_dir() {
-	printf '%s/stacks/%s' "$ROOT_DIR" "$1"
+	printf '%s/%s' "$HOST_DIR" "$1"
 }
 
 run_compose() {
@@ -84,6 +88,45 @@ is_enabled_stack() {
 	done
 
 	return 1
+}
+
+stop_enabled_stacks() {
+	local extra_args=("$@")
+	local stack_name=""
+	local index=0
+
+	for ((index = ${#ENABLED_STACKS[@]} - 1; index >= 0; index--)); do
+		stack_name="${ENABLED_STACKS[index]}"
+		[[ "$stack_name" == "reverse_proxy" ]] && continue
+		printf 'stopping %s\n' "$stack_name"
+		run_compose "$stack_name" down "${extra_args[@]}"
+	done
+
+	for stack_name in "${ENABLED_STACKS[@]}"; do
+		[[ "$stack_name" == "reverse_proxy" ]] || continue
+		printf 'stopping %s\n' "$stack_name"
+		run_compose "$stack_name" down "${extra_args[@]}"
+	done
+}
+
+remove_edge_network_if_unused() {
+	local attached_count=""
+
+	[[ -n "${EDGE_NETWORK:-}" ]] || fail "EDGE_NETWORK must be set in ${ENV_FILE}"
+
+	if ! docker network inspect "$EDGE_NETWORK" >/dev/null 2>&1; then
+		printf 'network not present: %s\n' "$EDGE_NETWORK"
+		return
+	fi
+
+	attached_count="$(docker network inspect "$EDGE_NETWORK" --format '{{ len .Containers }}')"
+	if [[ "$attached_count" != "0" ]]; then
+		printf 'keeping network %s (%s attached containers)\n' "$EDGE_NETWORK" "$attached_count"
+		return
+	fi
+
+	docker network rm "$EDGE_NETWORK" >/dev/null
+	printf 'removed external network: %s\n' "$EDGE_NETWORK"
 }
 
 target_path_for_example() {

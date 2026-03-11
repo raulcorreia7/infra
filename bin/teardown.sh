@@ -13,9 +13,10 @@ declare -a ENABLED_STACKS=()
 
 usage() {
 	cat <<'EOF'
-Usage: bin/down.sh <host>
+Usage: bin/teardown.sh <host>
 
-Stop enabled stacks for one host.
+Stop enabled stacks, remove compose resources, and clean up the shared edge
+network when it is no longer in use.
 EOF
 }
 
@@ -34,10 +35,12 @@ main() {
 
 	if [[ "${#ENABLED_STACKS[@]}" -eq 0 ]]; then
 		printf 'no enabled stacks for host %s\n' "$HOST_NAME"
-		return
+	else
+		stop_enabled_stacks --remove-orphans -v
 	fi
 
-	stop_enabled_stacks
+	remove_edge_network_if_unused
+	printf 'bind-mounted data and rendered config files were left in place\n'
 }
 
 main "$@"
