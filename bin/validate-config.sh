@@ -19,6 +19,9 @@ Usage: bin/validate-config.sh [host]
 
 Run preflight validation for rendered templates, shell scripts, and Compose
 config. Defaults to `cerberus` when no host is provided.
+
+Options:
+  -h, --help Show this help.
 EOF
 }
 

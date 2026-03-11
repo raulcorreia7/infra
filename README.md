@@ -17,7 +17,7 @@ rendered config.
 bash bin/setup.sh cerberus
 bash bin/validate-config.sh cerberus
 bash bin/up.sh cerberus
-bash bin/verify-runtime.sh cerberus
+bash bin/health.sh cerberus
 ```
 
 Stop everything:
@@ -51,7 +51,7 @@ testing.
 - `bash bin/teardown.sh <host>` remove stack resources and clean up unused host network state
 - `bash bin/teardown.sh --remove <host>` also remove stack images and clear rendered runtime files
 - `bash bin/logs.sh <host> [stack]` inspect logs
-- `bash bin/verify-runtime.sh <host>` run post-start health checks
+- `bash bin/health.sh <host>` run post-start health checks
 - `bash bin/fmt.sh` format shell scripts
 - `bash bin/lint.sh` lint shell scripts
 - `bash bin/validate-config.sh [host]` validate templates and stack config

@@ -11,6 +11,9 @@ usage() {
 Usage: bin/fmt.sh
 
 Format tracked shell scripts with shfmt or a Docker fallback.
+
+Options:
+  -h, --help Show this help.
 EOF
 }
 

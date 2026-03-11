@@ -11,6 +11,9 @@ usage() {
 Usage: bin/lint.sh
 
 Lint tracked shell scripts with shellcheck or a Docker fallback.
+
+Options:
+  -h, --help Show this help.
 EOF
 }
 

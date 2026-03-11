@@ -16,6 +16,9 @@ usage() {
 Usage: bin/setup.sh <host>
 
 Prepare one host for running enabled Docker Compose stacks.
+
+Options:
+  -h, --help Show this help.
 EOF
 }
 

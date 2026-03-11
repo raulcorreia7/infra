@@ -3,7 +3,7 @@
 Small public edge on `cerberus`. Internal services stay behind Caddy by
 default.
 
-## Rule
+## Rule Of Thumb
 
 ```text
 public traffic -> Caddy -> internal service

@@ -18,6 +18,9 @@ usage() {
 Usage: bin/logs.sh <host> [stack]
 
 Follow logs for one enabled stack or all enabled stacks.
+
+Options:
+  -h, --help Show this help.
 EOF
 }
 

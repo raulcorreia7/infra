@@ -16,8 +16,7 @@ network.
 
 1. Run `bash bin/setup.sh <host>` to render `config/Caddyfile` from the host env.
 2. Review `config/Caddyfile`.
-3. Make sure the `${EDGE_NETWORK}` external Docker network already exists.
-4. Start the stack: `docker compose up -d`
+3. Start the host with `bash bin/up.sh <host>`.
 
 ## Routing Model
 
@@ -49,6 +48,6 @@ To add more routes later, keep the same render-and-review workflow:
 
 1. Edit `config/Caddyfile`.
 2. Add more `handle` blocks or additional site blocks for new services.
-3. Reload or recreate the container with `docker compose up -d`.
+3. Re-run `bash bin/up.sh <host>` or use `bash bin/logs.sh <host> reverse_proxy` while iterating.
 
 Keep the public hostname and path rules together in the Caddyfile so the edge routing logic stays easy to read.

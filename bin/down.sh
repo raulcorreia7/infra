@@ -16,6 +16,9 @@ usage() {
 Usage: bin/down.sh <host>
 
 Stop enabled stacks for one host.
+
+Options:
+  -h, --help Show this help.
 EOF
 }
 

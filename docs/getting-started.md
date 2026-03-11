@@ -3,7 +3,7 @@
 ## Flow
 
 ```text
-ssh key -> host env -> setup -> rendered local config -> up -> verify-runtime
+ssh key -> host env -> setup -> rendered local config -> up -> health
                                               \-> teardown
 ```
 
@@ -16,7 +16,7 @@ ssh key -> host env -> setup -> rendered local config -> up -> verify-runtime
 5. Run `bash bin/validate-config.sh <host>`.
 6. Review the rendered local config files.
 7. Run `bash bin/up.sh <host>`.
-8. Run `bash bin/verify-runtime.sh <host>` after startup.
+8. Run `bash bin/health.sh <host>` after startup.
 9. Run `bash bin/teardown.sh <host>` when you want to remove stack resources.
 10. Run `bash bin/teardown.sh --remove <host>` for a full local reset.
 

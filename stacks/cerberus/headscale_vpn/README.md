@@ -5,7 +5,7 @@ Both containers join an existing edge network and expect Caddy to terminate TLS
 and route traffic on the hostname from `stacks/<host>/.env`, so the compose
 stack does not publish any public ports.
 
-Rule of thumb: keep these services internal and access them through the reverse
+Default rule: keep these services internal and access them through the reverse
 proxy stack. Direct port publishing is only a temporary testing escape hatch.
 
 ## What is included
@@ -52,14 +52,14 @@ Important:
 
 ## Required environment
 
-Create or export `EDGE_NETWORK` before starting the stack. It must point to an
-already existing Docker network used by your reverse proxy.
+Set `EDGE_NETWORK` in `stacks/<host>/.env`. It must point to the shared Docker
+network used by the reverse proxy stack.
 
 Example:
 
 ```bash
-export EDGE_NETWORK=edge
-docker compose -f stacks/<host>/headscale_vpn/compose.yaml up -d
+bash bin/setup.sh <host>
+bash bin/up.sh <host>
 ```
 
 ## Reverse proxy notes

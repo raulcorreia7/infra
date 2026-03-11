@@ -13,9 +13,12 @@ declare -a ENABLED_STACKS=()
 
 usage() {
 	cat <<'EOF'
-Usage: bin/verify-runtime.sh <host>
+Usage: bin/health.sh <host>
 
-Run basic status and health checks for one host.
+Run basic runtime health checks for one host.
+
+Options:
+  -h, --help Show this help.
 EOF
 }
 

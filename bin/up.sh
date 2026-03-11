@@ -16,6 +16,9 @@ usage() {
 Usage: bin/up.sh <host>
 
 Start enabled stacks for one host.
+
+Options:
+  -h, --help Show this help.
 EOF
 }
 
