@@ -8,28 +8,30 @@ network.
 ## Files
 
 - `compose.yaml` starts the Caddy container.
-- `config/Caddyfile.example` is the tracked template you copy and edit locally.
+- `config/Caddyfile.template` is the tracked template rendered during setup.
 - `data/` stores Caddy runtime state, including ACME account data and issued certificates.
 
 ## Setup
 
-1. Copy the example file: `cp config/Caddyfile.example config/Caddyfile`
-2. Review `config/Caddyfile`. The committed default already targets
-   `cerberus.raulcorreia.dev`.
-3. If you reuse this stack for another host later, replace that hostname in the
-   copied file.
-4. Make sure the `${EDGE_NETWORK}` external Docker network already exists.
-5. Start the stack: `docker compose up -d`
+1. Run `bash bin/setup.sh <host>` to render `config/Caddyfile` from the host env.
+2. Review `config/Caddyfile`.
+3. Make sure the `${EDGE_NETWORK}` external Docker network already exists.
+4. Start the stack: `docker compose up -d`
 
 ## Routing Model
 
-The example configuration uses one hostname and two routes on
-`cerberus.raulcorreia.dev`:
+The rendered configuration uses one hostname from `PUBLIC_FQDN` and two routes:
 
 - Requests for `/admin*` go to `headplane:3000`.
 - All other requests go to `headscale:8080`.
 
 The `/admin` prefix is preserved when proxying to Headplane, so Headplane must be prepared to serve that path as-is.
+
+## Production rule
+
+Treat Caddy as the public entrypoint. Application stacks should stay internal by
+default and rely on the reverse proxy for access unless you are doing temporary
+local testing.
 
 ## Storage Ownership
 
@@ -39,7 +41,7 @@ Caddy owns both public TLS listeners and the certificate material stored in
 
 ## Extending Later
 
-To add more routes later, keep the same copy-edit workflow:
+To add more routes later, keep the same render-and-review workflow:
 
 1. Edit `config/Caddyfile`.
 2. Add more `handle` blocks or additional site blocks for new services.

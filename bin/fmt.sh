@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+# shellcheck source=bin/lib/common.sh
+. "${ROOT_DIR}/bin/lib/common.sh"
+
+run_shfmt() {
+	if command -v shfmt >/dev/null 2>&1; then
+		shfmt "$@"
+		return
+	fi
+
+	docker run --rm \
+		-v "${ROOT_DIR}:/workdir" \
+		-w /workdir \
+		mvdan/shfmt:v3.10.0 \
+		shfmt "$@"
+}
+
+main() {
+	require_command docker
+	mapfile -t shell_files < <(git -C "$ROOT_DIR" ls-files --cached --others --exclude-standard '*.sh')
+
+	if [[ "${#shell_files[@]}" -eq 0 ]]; then
+		printf 'no shell files to format\n'
+		return
+	fi
+
+	run_shfmt -w "${shell_files[@]}"
+}
+
+main "$@"

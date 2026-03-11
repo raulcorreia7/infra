@@ -3,11 +3,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+# shellcheck source=bin/lib/common.sh
+. "${ROOT_DIR}/bin/lib/common.sh"
+
 HOST_NAME="${1:-}"
 HOST_DIR=""
 ENV_FILE=""
 STACKS_FILE=""
-EDGE_NETWORK=""
 declare -a ENABLED_STACKS=()
 
 usage() {
@@ -18,85 +20,31 @@ Prepare one host for running enabled Docker Compose stacks.
 EOF
 }
 
-fail() {
-	printf 'error: %s\n' "$1" >&2
-	exit 1
-}
-
-trim() {
-	local value="$1"
-	value="${value#"${value%%[![:space:]]*}"}"
-	value="${value%"${value##*[![:space:]]}"}"
-	printf '%s' "$value"
-}
-
-require_host_name() {
-	[[ -n "$HOST_NAME" ]] || {
-		usage >&2
-		exit 1
-	}
-}
-
-set_host_paths() {
-	HOST_DIR="${ROOT_DIR}/hosts/${HOST_NAME}"
-	ENV_FILE="${HOST_DIR}/.env"
-	STACKS_FILE="${HOST_DIR}/stacks.txt"
-
-	[[ -d "$HOST_DIR" ]] || fail "unknown host '${HOST_NAME}' (missing ${HOST_DIR})"
-	[[ -f "$STACKS_FILE" ]] || fail "missing stacks file: ${STACKS_FILE}"
-}
-
-require_command() {
-	command -v "$1" >/dev/null 2>&1 || fail "missing required command: $1"
-}
-
-require_docker_compose() {
-	docker compose version >/dev/null 2>&1 || fail "docker compose is required"
-}
-
-target_path_for_example() {
+copy_example_file_once() {
 	local example_file="$1"
+	local target_file=""
 
-	case "$example_file" in
-	*.example.yaml)
-		printf '%s.yaml' "${example_file%.example.yaml}"
-		;;
-	*.example)
-		printf '%s' "${example_file%.example}"
-		;;
-	*)
-		fail "unsupported example file: ${example_file}"
-		;;
-	esac
+	target_file="$(target_path_for_example "$example_file")"
+	[[ -e "$target_file" ]] && return
+
+	cp "$example_file" "$target_file"
+	printf 'created %s\n' "${target_file#"${ROOT_DIR}/"}"
 }
 
-load_host_env() {
-	[[ -f "$ENV_FILE" ]] || fail "missing ${ENV_FILE}; copy ${HOST_DIR}/.env.example to ${ENV_FILE} first"
+render_template_file_once() {
+	local template_file="$1"
+	local target_file=""
 
-	set -a
-	# shellcheck disable=SC1090
-	. "$ENV_FILE"
-	set +a
+	target_file="$(target_path_for_template "$template_file")"
+	[[ -e "$target_file" ]] && return
 
-	[[ -n "${EDGE_NETWORK:-}" ]] || fail "EDGE_NETWORK must be set in ${ENV_FILE}"
-}
-
-load_enabled_stacks() {
-	local raw_line=""
-	local stack_name=""
-
-	ENABLED_STACKS=()
-
-	while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
-		stack_name="${raw_line%%#*}"
-		stack_name="$(trim "$stack_name")"
-
-		[[ -n "$stack_name" ]] || continue
-		ENABLED_STACKS+=("$stack_name")
-	done <"$STACKS_FILE"
+	render_template_to_file "$template_file" "$target_file"
+	printf 'rendered %s\n' "${target_file#"${ROOT_DIR}/"}"
 }
 
 ensure_edge_network() {
+	[[ -n "${EDGE_NETWORK:-}" ]] || fail "EDGE_NETWORK must be set in ${ENV_FILE}"
+
 	if docker network inspect "$EDGE_NETWORK" >/dev/null 2>&1; then
 		printf 'network already present: %s\n' "$EDGE_NETWORK"
 		return
@@ -106,66 +54,53 @@ ensure_edge_network() {
 	printf 'created external network: %s\n' "$EDGE_NETWORK"
 }
 
-copy_example_file() {
-	local example_file="$1"
-	local target_file=""
-	local generated_secret=""
-
-	target_file="$(target_path_for_example "$example_file")"
-
-	[[ -e "$target_file" ]] && return
-
-	cp "$example_file" "$target_file"
-
-	if grep -q 'REPLACE_WITH_32_CHAR_SECRET' "$target_file"; then
-		generated_secret="$(openssl rand -hex 16)"
-		sed -i "s/REPLACE_WITH_32_CHAR_SECRET/${generated_secret}/g" "$target_file"
-	fi
-
-	printf 'created %s\n' "${target_file#"${ROOT_DIR}/"}"
-}
-
 ensure_stack_directories() {
 	local stack_name="$1"
-	local stack_dir="$2"
+	local stack_directory="$2"
 
 	case "$stack_name" in
 	headscale_vpn)
-		mkdir -p "$stack_dir/data/headscale" "$stack_dir/data/headplane"
-		printf 'ensured %s\n' "${stack_dir#"${ROOT_DIR}/"}/data/headscale"
-		printf 'ensured %s\n' "${stack_dir#"${ROOT_DIR}/"}/data/headplane"
-		;;
-	reverse_proxy)
-		mkdir -p "$stack_dir/data"
-		printf 'ensured %s\n' "${stack_dir#"${ROOT_DIR}/"}/data"
+		mkdir -p "$stack_directory/data/headscale" "$stack_directory/data/headplane"
+		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/headscale"
+		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/headplane"
 		;;
 	*)
-		mkdir -p "$stack_dir/data"
-		printf 'ensured %s\n' "${stack_dir#"${ROOT_DIR}/"}/data"
+		mkdir -p "$stack_directory/data"
+		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data"
 		;;
 	esac
 }
 
 prepare_stack() {
 	local stack_name="$1"
-	local stack_dir="${ROOT_DIR}/stacks/${stack_name}"
+	local stack_directory="${ROOT_DIR}/stacks/${stack_name}"
+	local template_file=""
 	local example_file=""
 
-	[[ -d "$stack_dir" ]] || fail "missing stack directory: ${stack_dir}"
+	[[ -d "$stack_directory" ]] || fail "missing stack directory: ${stack_directory}"
+	ensure_stack_directories "$stack_name" "$stack_directory"
 
-	ensure_stack_directories "$stack_name" "$stack_dir"
+	while IFS= read -r template_file; do
+		render_template_file_once "$template_file"
+	done < <(find "$stack_directory" -type f \( -name '*.template' -o -name '*.template.yaml' \) | sort)
 
 	while IFS= read -r example_file; do
-		copy_example_file "$example_file"
-	done < <(find "$stack_dir" -type f \( -name '*.example' -o -name '*.example.yaml' \) | sort)
+		copy_example_file_once "$example_file"
+	done < <(find "$stack_directory" -type f \( -name '*.example' -o -name '*.example.yaml' \) | sort)
 }
 
 main() {
-	require_host_name
-	set_host_paths
+	if [[ -z "$HOST_NAME" ]]; then
+		usage >&2
+		exit 1
+	fi
+
 	require_command docker
+	require_command envsubst
 	require_command openssl
 	require_docker_compose
+	set_host_paths
+	require_local_env_file
 	load_host_env
 	load_enabled_stacks
 	ensure_edge_network

@@ -1,4 +1,4 @@
-cerberus.raulcorreia.dev {
+${PUBLIC_FQDN} {
 	handle /admin* {
 		reverse_proxy headplane:3000
 	}

@@ -1,7 +1,7 @@
 # Infra
 
 Small host-scoped infrastructure monorepo built around Docker Compose, Caddy,
-and a copy-edit config workflow.
+and a render-once config workflow.
 
 ## Purpose
 
@@ -17,49 +17,58 @@ host config, run setup once, then start the enabled stacks.
 The current `cerberus` defaults also seed the Headscale users `gil` and `raul`
 after startup.
 
-## Directory Structure
+## Quick Start
 
-```text
-infra/
-├── README.md
-├── .gitignore
-├── bin/
-│   ├── setup.sh
-│   ├── up.sh
-│   ├── down.sh
-│   ├── logs.sh
-│   └── verify.sh
-├── hosts/
-│   ├── cerberus/
-│   │   ├── .env
-│   │   ├── .env.example
-│   │   └── stacks.txt
-│   ├── nas/
-│   │   ├── .env.example
-│   │   └── stacks.txt
-│   └── proxmox/
-│       ├── .env.example
-│       └── stacks.txt
-└── stacks/
-    ├── headscale_vpn/
-    │   ├── README.md
-    │   ├── compose.yaml
-    │   ├── config/
-    │   └── data/
-    └── reverse_proxy/
-        ├── README.md
-        ├── compose.yaml
-        ├── config/
-        └── data/
+```bash
+bash bin/setup.sh cerberus
+
+# review local config files rendered from hosts/cerberus/.env
+$EDITOR stacks/reverse_proxy/config/Caddyfile
+$EDITOR stacks/headscale_vpn/config/headscale/config.yaml
+$EDITOR stacks/headscale_vpn/config/headplane/config.yaml
+
+bash bin/up.sh cerberus
+bash bin/verify.sh cerberus
 ```
+
+To stop everything later:
+
+```bash
+bash bin/down.sh cerberus
+```
+
+## Repo Layout
+
+- `bin/` holds the root lifecycle scripts.
+- `docs/` holds topology and architecture notes.
+- `hosts/` holds host identity and enabled stack lists.
+- `stacks/headscale_vpn/` holds Headscale, Headplane, config templates, and local data.
+- `stacks/reverse_proxy/` holds Caddy, routing config, and local TLS state.
+
+## Architecture
+
+- `docs/homelab.md` documents the current homelab, public entrypoint, internal
+  Docker network layout, and request flow with ASCII diagrams.
+
+## Guide
+
+Use this flow on a new machine or after a local reset:
+
+1. Copy the repo.
+2. Review `hosts/<host>/.env.example` and create `hosts/<host>/.env` if needed.
+3. Enable stacks in `hosts/<host>/stacks.txt`.
+4. Run `bash bin/setup.sh <host>` to render any missing host-driven config files.
+5. Review the local config files rendered from the host env.
+6. Run `bash bin/up.sh <host>`.
+7. Run `bash bin/verify.sh <host>`.
 
 ## Bring-Up Flow
 
 1. Review `hosts/<host>/.env` and `hosts/<host>/stacks.txt`.
 2. Run `bash bin/setup.sh <host>` to validate dependencies, create the external
-   Docker network, create missing data directories, and copy any missing
-   `*.example` files to their real local counterparts.
-3. Edit the copied local config files if needed.
+   Docker network, create missing data directories, render any missing
+   `*.template` files, and copy any missing `*.example` files.
+3. Edit the rendered local config files if needed.
 4. Run `bash bin/up.sh <host>` to start `reverse_proxy` first and the remaining
    stacks after that.
 5. Use `bash bin/logs.sh <host> [stack]` and `bash bin/verify.sh <host>` to
@@ -121,31 +130,43 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/Proxmo
 
 ## Copy/Edit Workflow
 
-`bash bin/setup.sh <host>` copies stack example files only when the real file is
-missing.
+`bash bin/setup.sh <host>` keeps `hosts/<host>/.env` as the single source of
+truth for host-specific values.
+
+When a stack has tracked templates, setup renders them only when the real local
+file is missing.
 
 Examples:
 
 - `.env.example` -> `.env`
-- `config.example.yaml` -> `config.yaml`
+- `config.template.yaml` -> `config.yaml`
 - `policy.example.yaml` -> `policy.yaml`
-- `Caddyfile.example` -> `Caddyfile`
+- `Caddyfile.template` -> `Caddyfile`
 
 Existing local files are never overwritten.
 
-When `stacks/headscale_vpn/config/headplane/config.yaml` is created for the
-first time, setup replaces `REPLACE_WITH_32_CHAR_SECRET` with a generated
-32-character secret from `openssl rand -hex 16`.
+If `HEADPLANE_COOKIE_SECRET` is not set in `hosts/<host>/.env`, setup generates
+a 32-character secret from `openssl rand -hex 16` the first time it renders
+Headplane config.
+
+## Production Rule
+
+Use the reverse proxy stack as the normal public entrypoint. Application stacks
+should stay internal by default and only publish direct ports for short-lived
+testing.
 
 ## Commands
 
 | Command | Purpose |
 | --- | --- |
-| `bash bin/setup.sh <host>` | Validate prerequisites, create the shared Docker network, create missing runtime directories, and copy missing local config files. |
+| `bash bin/setup.sh <host>` | Validate prerequisites, create the shared Docker network, create missing runtime directories, render host-driven config templates, and copy any static starter files. |
 | `bash bin/up.sh <host>` | Start `reverse_proxy` first, then start the remaining enabled stacks in host order. |
 | `bash bin/down.sh <host>` | Stop non-proxy stacks in reverse order, then stop `reverse_proxy` last. |
 | `bash bin/logs.sh <host> [stack]` | Follow logs for one stack or all enabled stacks. |
 | `bash bin/verify.sh <host>` | Show Compose status, run Headscale checks, show recent service logs, and probe the public `/health` and `/admin` endpoints. |
+| `bash bin/fmt.sh` | Format tracked shell scripts with `shfmt` or a Docker fallback. |
+| `bash bin/lint.sh` | Lint tracked shell scripts with `shellcheck` or a Docker fallback. |
+| `bash bin/validate.sh [host]` | Render templates for a host in a temp directory and validate shell, Compose, and Caddy config. |
 
 ## Stack Notes
 

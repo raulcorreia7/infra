@@ -1,9 +1,13 @@
 services:
   headscale:
-    image: docker.io/headscale/headscale:0.28.0
+    image: docker.io/headscale/headscale:stable
     container_name: headscale
     restart: unless-stopped
     command: serve
+    # Testing only. In production, keep Headscale internal and access it through
+    # the reverse proxy stack instead of publishing ports directly here.
+    # ports:
+    #   - "8080:8080"
     environment:
       TZ: ${TZ}
     labels:
@@ -24,6 +28,10 @@ services:
     image: ghcr.io/tale/headplane:0.6.2
     container_name: headplane
     restart: unless-stopped
+    # Testing only. In production, keep Headplane internal and access it
+    # through the reverse proxy stack instead of publishing ports directly.
+    # ports:
+    #   - "3000:3000"
     depends_on:
       headscale:
         condition: service_healthy

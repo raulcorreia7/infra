@@ -1,4 +1,4 @@
-server_url: "https://cerberus.raulcorreia.dev"
+server_url: "https://${PUBLIC_FQDN}"
 listen_addr: "0.0.0.0:8080"
 metrics_listen_addr: "0.0.0.0:9090"
 grpc_listen_addr: "127.0.0.1:50443"
@@ -42,18 +42,18 @@ policy:
 
 dns:
   magic_dns: true
-  base_domain: "tailnet.cerberus.raulcorreia.dev"
+  base_domain: "${TAILNET_DOMAIN}"
   override_local_dns: true
   nameservers:
     global:
+      - "9.9.9.9"
       - "1.1.1.1"
       - "1.0.0.1"
-      - "9.9.9.9"
     split:
       home.arpa:
         - "192.168.100.1"
   search_domains:
-    - "tailnet.cerberus.raulcorreia.dev"
+    - "home.arpa"
   extra_records: []
 
 unix_socket: "/var/run/headscale/headscale.sock"
