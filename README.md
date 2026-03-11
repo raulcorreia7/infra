@@ -45,6 +45,7 @@ testing.
 ## Commands
 
 - `bash bin/setup.sh <host>` bootstrap host config and runtime directories
+- `bash bin/install-ssh-key.sh [user@]host` install your local public SSH key on a server
 - `bash bin/up.sh <host>` start enabled stacks
 - `bash bin/down.sh <host>` stop enabled stacks
 - `bash bin/teardown.sh <host>` remove stack resources and clean up unused host network state

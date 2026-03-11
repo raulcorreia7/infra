@@ -4,6 +4,25 @@ set -euo pipefail
 SEED_USERS_RAW="${HEADSCALE_SEED_USERS:-}"
 declare -a SEED_USERS=()
 
+usage() {
+	cat <<'EOF'
+Usage: seed-users.sh
+
+Create Headscale users listed in HEADSCALE_SEED_USERS when they are missing.
+EOF
+}
+
+is_help_request() {
+	case "${1:-}" in
+	-h | --help)
+		return 0
+		;;
+	*)
+		return 1
+		;;
+	esac
+}
+
 load_seed_users() {
 	local entry=""
 
@@ -55,6 +74,11 @@ ensure_user() {
 
 main() {
 	local user_name=""
+
+	if is_help_request "${1:-}"; then
+		usage
+		return
+	fi
 
 	load_seed_users
 

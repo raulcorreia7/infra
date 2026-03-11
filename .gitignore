@@ -7,23 +7,14 @@
 stacks/*/.env
 !stacks/*/.env.example
 
-# Generated stack state
-stacks/**/data/**
-!stacks/**/data/.gitkeep
-!stacks/**/data/**/
-!stacks/**/data/**/.gitkeep
-
-# Copied local config
-stacks/**/.env
+# Rendered and copied local config
 stacks/**/config/Caddyfile
 stacks/**/config/policy.yaml
 stacks/**/config/**/config.yaml
 
-# Runtime databases and keys
-stacks/**/*.local
-stacks/**/*.db
-stacks/**/*.sqlite
-stacks/**/*.sqlite3
-stacks/**/*.pem
-stacks/**/*.key
-stacks/**/*.crt
+# Generated stack state
+stacks/**/data/**
+!stacks/**/data/
+!stacks/**/data/.gitkeep
+!stacks/**/data/**/
+!stacks/**/data/**/.gitkeep

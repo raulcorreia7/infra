@@ -3,8 +3,8 @@
 ## Flow
 
 ```text
-host env -> setup -> rendered local config -> up -> verify-runtime
-                                     \-> teardown
+ssh key -> host env -> setup -> rendered local config -> up -> verify-runtime
+                                              \-> teardown
 ```
 
 ## Bring Up A Host
