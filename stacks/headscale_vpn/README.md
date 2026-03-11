@@ -68,6 +68,7 @@ docker compose -f stacks/headscale_vpn/compose.yaml up -d
 
 - MagicDNS is enabled.
 - The tailnet base domain comes from `TAILNET_DOMAIN`.
+- The home domain is `home.arpa`.
 - Global resolvers are `9.9.9.9`, `1.1.1.1`, and `1.0.0.1`.
 - Split DNS sends `home.arpa` to `192.168.100.1`.
 - Search domains include `home.arpa`.

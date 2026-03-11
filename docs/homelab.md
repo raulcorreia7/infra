@@ -84,12 +84,19 @@ ISP
     -> phone
 ```
 
+Home domain:
+
+```text
+home.arpa
+```
+
 ## Tailnet Defaults
 
 ```text
 MagicDNS       enabled
 Base domain    tailnet.cerberus.raulcorreia.dev
 Resolvers      9.9.9.9, 1.1.1.1, 1.0.0.1
+Home domain    home.arpa
 Split DNS      home.arpa -> 192.168.100.1
 Search domain  home.arpa
 ```
@@ -100,5 +107,6 @@ Search domain  home.arpa
 Firewall / router   hermes
 LAN gateway         192.168.100.1/24
 ISP upstream        192.168.178.1/24
+Home domain         home.arpa
 Public edge         cerberus
 ```
