@@ -75,9 +75,8 @@ Use this flow on a new machine or after a local reset:
    inspect the running services.
 6. Run `bash bin/down.sh <host>` to stop the host cleanly.
 
-For `cerberus`, the committed defaults already target
-`cerberus.raulcorreia.dev`, so the first bring-up should need only small edits
-at most.
+For `cerberus`, the domain defaults are already in `hosts/cerberus/.env.example`.
+Fill in the remaining local values before the first bring-up.
 
 ## Enable a Stack
 
@@ -149,7 +148,7 @@ If `HEADPLANE_COOKIE_SECRET` is not set in `hosts/<host>/.env`, setup generates
 a 32-character secret from `openssl rand -hex 16` the first time it renders
 Headplane config.
 
-## Production Rule
+## Access Rule
 
 Use the reverse proxy stack as the normal public entrypoint. Application stacks
 should stay internal by default and only publish direct ports for short-lived

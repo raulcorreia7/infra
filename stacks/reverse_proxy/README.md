@@ -27,7 +27,7 @@ The rendered configuration uses one hostname from `PUBLIC_FQDN` and two routes:
 
 The `/admin` prefix is preserved when proxying to Headplane, so Headplane must be prepared to serve that path as-is.
 
-## Production rule
+## Default rule
 
 Treat Caddy as the public entrypoint. Application stacks should stay internal by
 default and rely on the reverse proxy for access unless you are doing temporary

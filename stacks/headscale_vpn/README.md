@@ -5,9 +5,8 @@ Both containers join an existing edge network and expect Caddy to terminate TLS
 and route traffic on the hostname from `hosts/<host>/.env`, so the compose
 stack does not publish any public ports.
 
-Rule of thumb: in production, keep these services internal and access them
-through the reverse proxy stack. Direct port publishing is only a temporary
-testing escape hatch.
+Rule of thumb: keep these services internal and access them through the reverse
+proxy stack. Direct port publishing is only a temporary testing escape hatch.
 
 ## What is included
 
