@@ -18,6 +18,17 @@ require_docker_compose() {
 	docker compose version >/dev/null 2>&1 || fail "docker compose is required"
 }
 
+is_help_flag() {
+	case "${1:-}" in
+	-h | --help)
+		return 0
+		;;
+	*)
+		return 1
+		;;
+	esac
+}
+
 list_existing_shell_files() {
 	local shell_file=""
 
@@ -190,4 +201,35 @@ render_template_to_file() {
 	ensure_template_context "$template_file"
 	require_template_variables "$template_file"
 	envsubst <"$template_file" >"$target_file"
+}
+
+remove_stack_runtime_files() {
+	local stack_name="$1"
+	local stack_directory=""
+	local template_file=""
+	local example_file=""
+	local target_file=""
+
+	stack_directory="$(stack_dir "$stack_name")"
+
+	if [[ -d "$stack_directory/data" ]]; then
+		find "$stack_directory/data" -mindepth 1 ! -name '.gitkeep' -exec rm -rf {} +
+		printf 'cleared %s\n' "${stack_directory#"${ROOT_DIR}/"}/data"
+	fi
+
+	while IFS= read -r template_file; do
+		target_file="$(target_path_for_template "$template_file")"
+		if [[ -f "$target_file" ]]; then
+			rm -f "$target_file"
+			printf 'removed %s\n' "${target_file#"${ROOT_DIR}/"}"
+		fi
+	done < <(find "$stack_directory" -type f \( -name '*.template' -o -name '*.template.yaml' \) | sort)
+
+	while IFS= read -r example_file; do
+		target_file="$(target_path_for_example "$example_file")"
+		if [[ -f "$target_file" ]]; then
+			rm -f "$target_file"
+			printf 'removed %s\n' "${target_file#"${ROOT_DIR}/"}"
+		fi
+	done < <(find "$stack_directory" -type f \( -name '*.example' -o -name '*.example.yaml' \) | sort)
 }

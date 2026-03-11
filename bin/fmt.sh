@@ -6,6 +6,14 @@ ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 # shellcheck source=bin/lib/common.sh
 . "${ROOT_DIR}/bin/lib/common.sh"
 
+usage() {
+	cat <<'EOF'
+Usage: bin/fmt.sh
+
+Format tracked shell scripts with shfmt or a Docker fallback.
+EOF
+}
+
 run_shfmt() {
 	if command -v shfmt >/dev/null 2>&1; then
 		shfmt "$@"
@@ -20,6 +28,11 @@ run_shfmt() {
 }
 
 main() {
+	if is_help_flag "${1:-}"; then
+		usage
+		return
+	fi
+
 	require_command docker
 	mapfile -t shell_files < <(list_existing_shell_files)
 

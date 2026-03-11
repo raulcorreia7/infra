@@ -12,7 +12,8 @@ proxy stack. Direct port publishing is only a temporary testing escape hatch.
 
 - `compose.yaml` for `headscale` and `headplane`
 - Host-driven config templates rendered during setup
-- `after-up.sh` to optionally create local Headscale users after the stack starts
+- `stack-up.sh` for stack-local startup tasks
+- `seed-users.sh` to optionally create local Headscale users after the stack starts
 - Empty data directories for persistent application state
 - A local `.gitignore` for runtime data and real config files
 - Stable container names so `docker exec headscale ...` and `docker exec headplane ...` work as expected on the host
@@ -75,7 +76,7 @@ docker compose -f stacks/<host>/headscale_vpn/compose.yaml up -d
 - Global resolvers are `9.9.9.9`, `1.1.1.1`, and `1.0.0.1`.
 - Split DNS sends `HOME_DOMAIN` to `HOME_DNS_RESOLVER`.
 - Search domains include `HOME_DOMAIN`.
-- `after-up.sh` only creates users listed in `HEADSCALE_SEED_USERS`.
+- `seed-users.sh` only creates users listed in `HEADSCALE_SEED_USERS`.
 
 ## Generate a Headscale API key
 

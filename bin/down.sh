@@ -20,6 +20,11 @@ EOF
 }
 
 main() {
+	if is_help_flag "$HOST_NAME"; then
+		usage
+		return
+	fi
+
 	if [[ -z "$HOST_NAME" ]]; then
 		usage >&2
 		exit 1

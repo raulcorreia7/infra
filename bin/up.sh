@@ -19,26 +19,31 @@ Start enabled stacks for one host.
 EOF
 }
 
-run_after_up_hook() {
+run_stack_up_script() {
 	local stack_name="$1"
-	local hook_path=""
+	local script_path=""
 
-	hook_path="$(stack_dir "$stack_name")/after-up.sh"
+	script_path="$(stack_dir "$stack_name")/stack-up.sh"
 
-	[[ -x "$hook_path" ]] || return 0
+	[[ -x "$script_path" ]] || return 0
 
-	printf 'running %s after-up hook\n' "$stack_name"
-	"$hook_path"
+	printf 'running %s stack-up script\n' "$stack_name"
+	"$script_path"
 }
 
 start_stack() {
 	local stack_name="$1"
 	printf 'starting %s\n' "$stack_name"
 	run_compose "$stack_name" up -d
-	run_after_up_hook "$stack_name"
+	run_stack_up_script "$stack_name"
 }
 
 main() {
+	if is_help_flag "$HOST_NAME"; then
+		usage
+		return
+	fi
+
 	if [[ -z "$HOST_NAME" ]]; then
 		usage >&2
 		exit 1

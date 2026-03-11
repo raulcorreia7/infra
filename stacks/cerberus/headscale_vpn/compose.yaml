@@ -25,7 +25,7 @@ services:
       retries: 5
 
   headplane:
-    image: ghcr.io/tale/headplane:0.6.2
+    image: ghcr.io/tale/headplane:latest
     container_name: headplane
     restart: unless-stopped
     # Testing only. In production, keep Headplane internal and access it

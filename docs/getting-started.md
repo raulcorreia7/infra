@@ -3,7 +3,7 @@
 ## Flow
 
 ```text
-host env -> setup -> rendered local config -> up -> verify
+host env -> setup -> rendered local config -> up -> verify-runtime
                                      \-> teardown
 ```
 
@@ -13,10 +13,12 @@ host env -> setup -> rendered local config -> up -> verify
 2. Fill in the host values.
 3. Add or remove stack folders under `stacks/<host>/`.
 4. Run `bash bin/setup.sh <host>`.
-5. Review the rendered local config files.
-6. Run `bash bin/up.sh <host>`.
-7. Run `bash bin/verify.sh <host>`.
-8. Run `bash bin/teardown.sh <host>` when you want to remove stack resources.
+5. Run `bash bin/validate-config.sh <host>`.
+6. Review the rendered local config files.
+7. Run `bash bin/up.sh <host>`.
+8. Run `bash bin/verify-runtime.sh <host>` after startup.
+9. Run `bash bin/teardown.sh <host>` when you want to remove stack resources.
+10. Run `bash bin/teardown.sh --remove <host>` for a full local reset.
 
 ## Host Model
 

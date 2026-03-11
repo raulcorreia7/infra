@@ -13,6 +13,15 @@ declare -a ENABLED_STACKS=()
 
 TEMP_DIR=""
 
+usage() {
+	cat <<'EOF'
+Usage: bin/validate-config.sh [host]
+
+Run preflight validation for rendered templates, shell scripts, and Compose
+config. Defaults to `cerberus` when no host is provided.
+EOF
+}
+
 cleanup() {
 	[[ -n "$TEMP_DIR" ]] || return
 	rm -rf "$TEMP_DIR"
@@ -85,6 +94,11 @@ validate_headscale_config() {
 
 main() {
 	trap cleanup EXIT
+	if is_help_flag "$HOST_NAME"; then
+		usage
+		return
+	fi
+
 	require_command docker
 	require_command envsubst
 	require_command openssl

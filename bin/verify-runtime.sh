@@ -13,7 +13,7 @@ declare -a ENABLED_STACKS=()
 
 usage() {
 	cat <<'EOF'
-Usage: bin/verify.sh <host>
+Usage: bin/verify-runtime.sh <host>
 
 Run basic status and health checks for one host.
 EOF
@@ -63,6 +63,11 @@ verify_public_endpoints() {
 }
 
 main() {
+	if is_help_flag "$HOST_NAME"; then
+		usage
+		return
+	fi
+
 	if [[ -z "$HOST_NAME" ]]; then
 		usage >&2
 		exit 1

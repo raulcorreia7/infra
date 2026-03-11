@@ -15,8 +15,9 @@ rendered config.
 
 ```bash
 bash bin/setup.sh cerberus
+bash bin/validate-config.sh cerberus
 bash bin/up.sh cerberus
-bash bin/verify.sh cerberus
+bash bin/verify-runtime.sh cerberus
 ```
 
 Stop everything:
@@ -29,6 +30,7 @@ Remove stack resources and the shared edge network when unused:
 
 ```bash
 bash bin/teardown.sh cerberus
+bash bin/teardown.sh --remove cerberus
 ```
 
 ## Rule Of Thumb
@@ -46,11 +48,12 @@ testing.
 - `bash bin/up.sh <host>` start enabled stacks
 - `bash bin/down.sh <host>` stop enabled stacks
 - `bash bin/teardown.sh <host>` remove stack resources and clean up unused host network state
+- `bash bin/teardown.sh --remove <host>` also remove stack images and clear rendered runtime files
 - `bash bin/logs.sh <host> [stack]` inspect logs
-- `bash bin/verify.sh <host>` run health checks
+- `bash bin/verify-runtime.sh <host>` run post-start health checks
 - `bash bin/fmt.sh` format shell scripts
 - `bash bin/lint.sh` lint shell scripts
-- `bash bin/validate.sh [host]` validate templates and stack config
+- `bash bin/validate-config.sh [host]` validate templates and stack config
 
 ## Docs
 
