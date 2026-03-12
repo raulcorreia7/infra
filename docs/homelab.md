@@ -32,7 +32,7 @@ public traffic -> Caddy -> internal service
                          |   raulcorreia.dev    |
                          '----------+-----------'
                                     |
-                    cerberus.raulcorreia.dev / 80,443
+              tailscale.cerberus.raulcorreia.dev / 80,443
                                     |
           .-------------------------v-------------------------.
           |                    cerberus VPS                   |
@@ -108,6 +108,36 @@ split DNS      home.arpa -> 192.168.100.1
 search domain  home.arpa
 magic DNS      enabled
 ```
+
+## Public DNS
+
+```text
+Cloudflare DNS only records:
+
+tailscale.cerberus.raulcorreia.dev  -> cerberus public IP
+future *.raulcorreia.dev services   -> cerberus public IP
+```
+
+Cerberus terminates TLS and proxies those public hostnames into the homelab when
+it has a reachable path to the private origin.
+
+## Remote Homelab Access
+
+```text
+Laptop on public network
+  -> Tailscale / Headscale
+  -> subnet route 192.168.100.0/24
+  -> athena Tailscale LXC subnet router
+  -> homelab LAN
+  -> home.arpa names and 192.168.100.x hosts
+```
+
+Expected result:
+
+- `athena.home.arpa` resolves privately
+- `daedalus.home.arpa` resolves privately
+- `ssh root@athena.home.arpa` works over the tailnet path
+- `ping 192.168.100.x` works once subnet routes are accepted
 
 ## Notes
 

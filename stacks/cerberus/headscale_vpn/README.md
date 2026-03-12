@@ -93,12 +93,17 @@ docker compose -f compose.yaml -f compose.local.yaml up -d
 ## Current Defaults
 
 - MagicDNS is enabled
+- The public control-plane hostname comes from `PUBLIC_FQDN`
 - The tailnet base domain comes from `TAILNET_DOMAIN`
 - The home domain comes from `HOME_DOMAIN`
 - Global resolvers are `9.9.9.9`, `1.1.1.1`, and `1.0.0.1`
 - Split DNS sends `HOME_DOMAIN` to `HOME_DNS_RESOLVER`
 - Search domains include `HOME_DOMAIN`
 - `seed-users.sh` only creates users listed in `HEADSCALE_SEED_USERS`
+
+Recommended current value:
+
+- `PUBLIC_FQDN=tailscale.cerberus.raulcorreia.dev`
 
 ## Admin Tasks
 

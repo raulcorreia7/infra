@@ -71,6 +71,12 @@ duplicated here.
 - `daedalus` is the internal Docker app host VM
 - `chronos` is the storage placeholder host
 
+Current name split:
+
+- `tailscale.cerberus.raulcorreia.dev` for the public Headscale entrypoint
+- `*.home.arpa` for private host and service access
+- future public `*.raulcorreia.dev` apps through Cerberus
+
 For topology and routing, use `docs/homelab.md`.
 
 ## Add A Host

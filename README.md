@@ -70,6 +70,12 @@ Stop or remove it:
 - `daedalus` is the internal Docker app host VM
 - `chronos` is the storage placeholder host
 
+Current public DNS split:
+
+- `tailscale.cerberus.raulcorreia.dev` -> Headscale and Headplane
+- `*.home.arpa` -> private hosts and services over the homelab/tailnet path
+- future public `*.raulcorreia.dev` apps -> Cerberus edge proxy
+
 The source of truth stays in `stacks/<host>/.env`. `setup` copies that env into
 each enabled stack as a filtered local `.env` based on `stack.env.keys` so
 direct `docker compose` usage stays simple without exposing the full host env to
