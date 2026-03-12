@@ -23,6 +23,7 @@ Keep it boring:
 - Enables a stack only when `stacks/<host>/<stack>/compose.yaml` exists
 - Uses `stacks/<host>/.env` as the source of truth for host values
 - Renders local config once during `setup` and does not overwrite existing files
+- Syncs a filtered stack-local `.env` from `stack.env.keys` so direct Compose use stays simple without leaking unrelated values
 
 Rule of thumb:
 
@@ -70,8 +71,9 @@ Stop or remove it:
 - `chronos` is the storage placeholder host
 
 The source of truth stays in `stacks/<host>/.env`. `setup` copies that env into
-each enabled stack as a local `.env` so direct `docker compose` usage stays
-simple and predictable.
+each enabled stack as a filtered local `.env` based on `stack.env.keys` so
+direct `docker compose` usage stays simple without exposing the full host env to
+every stack.
 
 ## Commands
 

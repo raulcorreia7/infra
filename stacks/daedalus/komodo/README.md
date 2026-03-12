@@ -16,7 +16,7 @@ source of truth.
 
 - Komodo Core
 - Komodo Periphery
-- MongoDB for Komodo state
+- FerretDB backed by Postgres for Komodo state
 
 ## Exposure
 

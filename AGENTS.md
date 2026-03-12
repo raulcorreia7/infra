@@ -21,7 +21,8 @@ Repo-specific guidance for agents working in this infra repo.
 ## Source Of Truth
 
 - `stacks/<host>/.env` is the source of truth for host-specific values
-- `setup` syncs `stacks/<host>/.env` into each enabled stack as a local `.env` for direct Compose use
+- `setup` syncs a filtered local `.env` into each enabled stack for direct Compose use
+- each real stack must declare its allowed env keys in `stack.env.keys`
 - `*.template*` files render once into local config files during `setup`
 - `*.example*` files copy once for static starter files during `setup`
 - `setup` must never overwrite existing rendered or copied local files

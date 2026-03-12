@@ -65,7 +65,7 @@ render_templates_for_stack() {
 		if grep -q '\${[A-Z0-9_][A-Z0-9_]*}' "$temp_target"; then
 			fail "unresolved template variables in ${template_file#"${ROOT_DIR}/"}"
 		fi
-	done < <(find "$stack_directory" -type f \( -name '*.template' -o -name '*.template.*' \) | sort)
+	done < <(find "$stack_directory" -path "$stack_directory/data" -prune -o -type f \( -name '*.template' -o -name '*.template.*' \) -print | sort)
 }
 
 validate_compose_files() {

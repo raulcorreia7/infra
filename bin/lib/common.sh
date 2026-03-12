@@ -232,7 +232,7 @@ remove_stack_runtime_files() {
 			rm -f "$target_file"
 			printf 'removed %s\n' "${target_file#"${ROOT_DIR}/"}"
 		fi
-	done < <(find "$stack_directory" -type f \( -name '*.template' -o -name '*.template.*' \) | sort)
+	done < <(find "$stack_directory" -path "$stack_directory/data" -prune -o -type f \( -name '*.template' -o -name '*.template.*' \) -print | sort)
 
 	while IFS= read -r example_file; do
 		target_file="$(target_path_for_example "$example_file")"
@@ -240,5 +240,5 @@ remove_stack_runtime_files() {
 			rm -f "$target_file"
 			printf 'removed %s\n' "${target_file#"${ROOT_DIR}/"}"
 		fi
-	done < <(find "$stack_directory" -type f \( -name '*.example' -o -name '*.example.*' \) | sort)
+	done < <(find "$stack_directory" -path "$stack_directory/data" -prune -o -type f \( -name '*.example' -o -name '*.example.*' \) -print | sort)
 }

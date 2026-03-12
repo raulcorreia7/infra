@@ -38,8 +38,9 @@ For cleanup:
 ## Local Stack Debugging
 
 After `setup`, each enabled stack gets a synced local `.env` file copied from
-`stacks/<host>/.env`. That means you can iterate with plain Compose from inside
-the stack directory:
+`stacks/<host>/.env` using that stack's `stack.env.keys` allowlist. That means
+you can iterate with plain Compose from inside the stack directory without
+pulling every host variable into every stack:
 
 ```bash
 cp stacks/daedalus/.env.example stacks/daedalus/.env
