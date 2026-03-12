@@ -69,6 +69,13 @@ Use SSH plus `rsync` to push the repo to a server without cloning there:
 config, and runtime data. Keep files like `stacks/<host>/.env`, `dns/.env`, and
 `dns/creds.json` on the remote host.
 
+If tracked templates change and you want to re-render them without touching
+runtime data, use:
+
+```bash
+./bin/refresh-config.sh cerberus
+```
+
 ## Host Model
 
 - `stacks/<host>/.env` is the source of truth for host-specific values

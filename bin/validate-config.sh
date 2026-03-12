@@ -76,24 +76,41 @@ validate_compose_files() {
 	done
 }
 
+run_quiet_validation() {
+	local label="$1"
+	shift
+	local output_file="${TEMP_DIR}/validation.log"
+
+	if "$@" >"$output_file" 2>&1; then
+		log_ok "$label"
+		return 0
+	fi
+
+	log_fail "validation failed: ${label}"
+	cat "$output_file" >&2
+	exit 1
+}
+
 validate_caddy_config() {
 	local rendered_caddy="${TEMP_DIR}/stacks/${HOST_NAME}/reverse_proxy/config/Caddyfile"
 	[[ -f "$rendered_caddy" ]] || return 0
 
-	docker run --rm \
+	run_quiet_validation 'caddy config' \
+		docker run --rm \
 		-v "$rendered_caddy:/etc/caddy/Caddyfile:ro" \
 		caddy:2 \
-		caddy validate --config /etc/caddy/Caddyfile >/dev/null
+		caddy validate --config /etc/caddy/Caddyfile
 }
 
 validate_headscale_config() {
 	local rendered_config="${TEMP_DIR}/stacks/${HOST_NAME}/headscale_vpn/config/headscale/config.yaml"
 	[[ -f "$rendered_config" ]] || return 0
 
-	docker run --rm \
+	run_quiet_validation 'headscale config' \
+		docker run --rm \
 		-v "$rendered_config:/etc/headscale/config.yaml:ro" \
 		headscale/headscale:stable \
-		configtest -c /etc/headscale/config.yaml >/dev/null
+		configtest -c /etc/headscale/config.yaml
 }
 
 main() {
@@ -119,17 +136,26 @@ main() {
 	require_docker_compose
 	TEMP_DIR="$(mktemp -d)"
 
+	print_section "Validate Config"
+	log_step "checking ${HOST_NAME}"
+
+	log_step 'checking shell syntax'
 	validate_shell_syntax
+	log_ok 'shell syntax is valid'
+	log_step 'checking compose config'
 	validate_compose_files
+	log_ok 'compose config is valid'
 
 	local stack_name=""
 	for stack_name in "${ENABLED_STACKS[@]}"; do
+		log_step "rendering ${stack_name} templates"
 		render_templates_for_stack "$stack_name"
+		log_ok "${stack_name} templates render cleanly"
 	done
 
 	validate_caddy_config
 	validate_headscale_config
-	printf 'validation passed for host %s\n' "$HOST_NAME"
+	log_ok "validation passed for ${HOST_NAME}"
 }
 
 main "$@"

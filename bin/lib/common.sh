@@ -5,6 +5,26 @@ fail() {
 	exit 1
 }
 
+print_section() {
+	printf '\n== %s ==\n' "$1"
+}
+
+log_step() {
+	printf '-> %s\n' "$1"
+}
+
+log_ok() {
+	printf 'ok: %s\n' "$1"
+}
+
+log_warn() {
+	printf 'warn: %s\n' "$1" >&2
+}
+
+log_fail() {
+	printf 'fail: %s\n' "$1" >&2
+}
+
 trim() {
 	local value="$1"
 	value="${value#"${value%%[![:space:]]*}"}"
@@ -76,7 +96,7 @@ warn_missing_env_example_keys() {
 	while IFS= read -r key; do
 		[[ -n "$key" ]] || continue
 		if ! grep -Eq "^${key}=" "$ENV_FILE"; then
-			printf 'warning: %s is missing %s (present in .env.example)\n' "${ENV_FILE#"${ROOT_DIR}/"}" "$key" >&2
+			log_warn "${ENV_FILE#"${ROOT_DIR}/"} is missing ${key} (present in .env.example)"
 		fi
 	done < <(grep -E '^[A-Z0-9_]+=' "$example_file" | cut -d '=' -f 1)
 }
@@ -173,13 +193,13 @@ stop_enabled_stacks() {
 	for ((index = ${#ENABLED_STACKS[@]} - 1; index >= 0; index--)); do
 		stack_name="${ENABLED_STACKS[index]}"
 		[[ "$stack_name" == "reverse_proxy" ]] && continue
-		printf 'stopping %s\n' "$stack_name"
+		log_step "stopping ${stack_name}"
 		run_compose "$stack_name" down "${extra_args[@]}"
 	done
 
 	for stack_name in "${ENABLED_STACKS[@]}"; do
 		[[ "$stack_name" == "reverse_proxy" ]] || continue
-		printf 'stopping %s\n' "$stack_name"
+		log_step "stopping ${stack_name}"
 		run_compose "$stack_name" down "${extra_args[@]}"
 	done
 }
@@ -190,18 +210,18 @@ remove_edge_network_if_unused() {
 	[[ -n "${EDGE_NETWORK:-}" ]] || fail "EDGE_NETWORK must be set in ${ENV_FILE}"
 
 	if ! docker network inspect "$EDGE_NETWORK" >/dev/null 2>&1; then
-		printf 'network not present: %s\n' "$EDGE_NETWORK"
+		log_step "network not present: ${EDGE_NETWORK}"
 		return
 	fi
 
 	attached_count="$(docker network inspect "$EDGE_NETWORK" --format '{{ len .Containers }}')"
 	if [[ "$attached_count" != "0" ]]; then
-		printf 'keeping network %s (%s attached containers)\n' "$EDGE_NETWORK" "$attached_count"
+		log_step "keeping network ${EDGE_NETWORK} (${attached_count} attached containers)"
 		return
 	fi
 
 	docker network rm "$EDGE_NETWORK" >/dev/null
-	printf 'removed external network: %s\n' "$EDGE_NETWORK"
+	log_ok "removed external network: ${EDGE_NETWORK}"
 }
 
 target_path_for_example() {
@@ -301,4 +321,21 @@ remove_stack_runtime_files() {
 			printf 'removed %s\n' "${target_file#"${ROOT_DIR}/"}"
 		fi
 	done < <(find "$stack_directory" -path "$stack_directory/data" -prune -o -type f \( -name '*.example' -o -name '*.example.*' \) -print | sort)
+}
+
+remove_stack_rendered_files() {
+	local stack_name="$1"
+	local stack_directory=""
+	local template_file=""
+	local target_file=""
+
+	stack_directory="$(stack_dir "$stack_name")"
+
+	while IFS= read -r template_file; do
+		target_file="$(target_path_for_template "$template_file")"
+		if [[ -f "$target_file" ]]; then
+			rm -f "$target_file"
+			log_step "removed ${target_file#"${ROOT_DIR}/"}"
+		fi
+	done < <(find "$stack_directory" -path "$stack_directory/data" -prune -o -type f \( -name '*.template' -o -name '*.template.*' \) -print | sort)
 }

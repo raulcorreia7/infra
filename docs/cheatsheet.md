@@ -58,6 +58,7 @@ Use it to create and host `daedalus`, then run the generic Compose workflow on
 ```bash
 ./bin/sync.sh root@cerberus infra
 ./bin/deploy.sh root@cerberus cerberus infra
+./bin/refresh-config.sh cerberus
 ```
 
 ## Stop And Cleanup

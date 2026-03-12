@@ -22,8 +22,22 @@ Options:
 EOF
 }
 
-print_heading() {
-	printf '\n== %s ==\n' "$1"
+run_quiet_check() {
+	local label="$1"
+	shift
+	local output_file=""
+	output_file="$(mktemp)"
+
+	if "$@" >"$output_file" 2>&1; then
+		rm -f "$output_file"
+		log_ok "$label"
+		return 0
+	fi
+
+	log_fail "$label"
+	cat "$output_file" >&2
+	rm -f "$output_file"
+	return 1
 }
 
 run_stack_health_script() {
@@ -33,54 +47,64 @@ run_stack_health_script() {
 	script_path="$(stack_script_path "$stack_name" "stack-health.sh")"
 	[[ -x "$script_path" ]] || return 0
 
-	print_heading "${stack_name}: stack health"
-	"$script_path"
+	run_quiet_check "${stack_name}: stack health" "$script_path"
 }
 
 verify_stack_status() {
 	local stack_name="$1"
-	print_heading "${stack_name}: docker compose ps"
-	run_compose "$stack_name" ps
+	local expected_services=""
+	local running_services=""
+
+	expected_services="$(run_compose "$stack_name" config --services | sort)"
+	running_services="$(run_compose "$stack_name" ps --services --status running | sort)"
+
+	if [[ "$expected_services" == "$running_services" ]]; then
+		log_ok "${stack_name}: all services running"
+		return 0
+	fi
+
+	log_fail "${stack_name}: service status mismatch"
+	printf 'expected services:\n%s\n' "$expected_services" >&2
+	printf 'running services:\n%s\n' "$running_services" >&2
+	run_compose "$stack_name" ps >&2 || true
+	return 1
+}
+
+dump_service_logs() {
+	local stack_name="$1"
+	local service_name="$2"
+
+	printf '\n-- %s: %s logs --\n' "$stack_name" "$service_name" >&2
+	run_compose "$stack_name" logs --tail 100 "$service_name" >&2 || true
 }
 
 verify_headscale_stack() {
 	is_enabled_stack headscale_vpn || return
 
-	print_heading 'headscale_vpn: headscale health'
-	run_compose headscale_vpn exec -T headscale headscale health
+	if ! run_quiet_check 'headscale_vpn: headscale health' run_compose headscale_vpn exec -T headscale headscale health; then
+		dump_service_logs headscale_vpn headscale
+		dump_service_logs headscale_vpn headplane
+		return 1
+	fi
 
-	print_heading 'headscale_vpn: headscale configtest'
-	run_compose headscale_vpn exec -T headscale headscale configtest
-
-	print_heading 'headscale_vpn: headscale logs'
-	run_compose headscale_vpn logs --tail 100 headscale
-
-	print_heading 'headscale_vpn: headplane logs'
-	run_compose headscale_vpn logs --tail 100 headplane
-}
-
-verify_reverse_proxy_stack() {
-	is_enabled_stack reverse_proxy || return
-
-	print_heading 'reverse_proxy: recent caddy logs'
-	run_compose reverse_proxy logs --tail 100 caddy
+	if ! run_quiet_check 'headscale_vpn: headscale configtest' run_compose headscale_vpn exec -T headscale headscale configtest; then
+		dump_service_logs headscale_vpn headscale
+		dump_service_logs headscale_vpn headplane
+		return 1
+	fi
 }
 
 verify_public_endpoints() {
 	[[ -n "${PUBLIC_FQDN:-}" ]] || return
 
-	print_heading "curl: https://${PUBLIC_FQDN}/health"
-	curl -I --fail --silent --show-error "https://${PUBLIC_FQDN}/health"
+	run_quiet_check "curl: https://${PUBLIC_FQDN}/health" curl -I --fail --silent --show-error "https://${PUBLIC_FQDN}/health"
 
-	print_heading "curl: https://${PUBLIC_FQDN}/admin"
-	curl -I --fail --silent --show-error "https://${PUBLIC_FQDN}/admin"
+	run_quiet_check "curl: https://${PUBLIC_FQDN}/admin" curl -I --fail --silent --show-error "https://${PUBLIC_FQDN}/admin"
 
 	if [[ -n "${PUBLIC_FQDN_COMPAT:-}" && "${PUBLIC_FQDN_COMPAT}" != "${PUBLIC_FQDN}" ]]; then
-		print_heading "curl: https://${PUBLIC_FQDN_COMPAT}/health"
-		curl -I --fail --silent --show-error "https://${PUBLIC_FQDN_COMPAT}/health"
+		run_quiet_check "curl: https://${PUBLIC_FQDN_COMPAT}/health" curl -I --fail --silent --show-error "https://${PUBLIC_FQDN_COMPAT}/health"
 
-		print_heading "curl: https://${PUBLIC_FQDN_COMPAT}/admin"
-		curl -I --fail --silent --show-error "https://${PUBLIC_FQDN_COMPAT}/admin"
+		run_quiet_check "curl: https://${PUBLIC_FQDN_COMPAT}/admin" curl -I --fail --silent --show-error "https://${PUBLIC_FQDN_COMPAT}/admin"
 	fi
 }
 
@@ -109,6 +133,9 @@ main() {
 	require_command docker
 	require_docker_compose
 
+	print_section "Health"
+	log_step "checking ${HOST_NAME}"
+
 	local stack_name=""
 	for stack_name in "${ENABLED_STACKS[@]}"; do
 		verify_stack_status "$stack_name"
@@ -119,8 +146,8 @@ main() {
 	done
 
 	verify_headscale_stack
-	verify_reverse_proxy_stack
 	verify_public_endpoints
+	log_ok "health checks passed for ${HOST_NAME}"
 }
 
 main "$@"

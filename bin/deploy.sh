@@ -84,7 +84,7 @@ main() {
 	"${ROOT_DIR}/bin/sync.sh" -p "$SSH_PORT" "$SSH_TARGET" "$REMOTE_PATH"
 
 	ssh -p "$SSH_PORT" "$SSH_TARGET" \
-		"cd \"$REMOTE_PATH\" && ./bin/doctor.sh && ./bin/setup.sh \"$HOST_NAME\" && ./bin/validate-config.sh \"$HOST_NAME\" && ./bin/up.sh \"$HOST_NAME\" && ./bin/health.sh \"$HOST_NAME\""
+		"cd \"$REMOTE_PATH\" && ./bin/doctor.sh \"$HOST_NAME\" && ./bin/refresh-config.sh \"$HOST_NAME\" && ./bin/validate-config.sh \"$HOST_NAME\" && ./bin/up.sh \"$HOST_NAME\" && ./bin/health.sh \"$HOST_NAME\""
 }
 
 main "$@"

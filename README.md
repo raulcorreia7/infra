@@ -98,6 +98,7 @@ every stack.
 | `./bin/install-ssh-key.sh [user@]host` | Install your local public SSH key on a server |
 | `./bin/sync.sh [user@]host [remote-path]` | Sync the repo to a remote host over SSH |
 | `./bin/deploy.sh [user@]host <host> [remote-path]` | Sync and run the remote host workflow |
+| `./bin/refresh-config.sh <host>` | Re-render generated host config without touching runtime data |
 | `./bin/install-dnscontrol.sh` | Install the repo-local DNSControl binary |
 | `./bin/dnscontrol <command>` | Run DNSControl from `dns/` with local env loading |
 | `./bin/doctor.sh` | Validate core repo, quality, and DNS tooling |
