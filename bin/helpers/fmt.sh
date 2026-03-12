@@ -2,32 +2,32 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+ROOT_DIR="$(cd -- "${SCRIPT_DIR}/../.." && pwd)"
 # shellcheck source=bin/lib/common.sh
 . "${ROOT_DIR}/bin/lib/common.sh"
 
 usage() {
 	cat <<'EOF'
-Usage: bin/lint.sh
+Usage: bin/helpers/fmt.sh
 
-Lint tracked shell scripts with shellcheck or a Docker fallback.
+Format tracked shell scripts with shfmt or a Docker fallback.
 
 Options:
   -h, --help Show this help.
 EOF
 }
 
-run_shellcheck() {
-	if command -v shellcheck >/dev/null 2>&1; then
-		shellcheck "$@"
+run_shfmt() {
+	if command -v shfmt >/dev/null 2>&1; then
+		shfmt "$@"
 		return
 	fi
 
 	docker run --rm \
 		-v "${ROOT_DIR}:/workdir" \
 		-w /workdir \
-		koalaman/shellcheck:stable \
-		shellcheck "$@"
+		mvdan/shfmt:v3.10.0 \
+		shfmt "$@"
 }
 
 main() {
@@ -36,15 +36,21 @@ main() {
 		return
 	fi
 
-	require_command docker
+	if ! command -v shfmt >/dev/null 2>&1; then
+		require_command docker
+	fi
+
 	mapfile -t shell_files < <(list_existing_shell_files)
 
 	if [[ "${#shell_files[@]}" -eq 0 ]]; then
-		printf 'no shell files to lint\n'
+		log_step 'no shell files to format'
 		return
 	fi
 
-	run_shellcheck --shell=bash --severity=warning "${shell_files[@]}"
+	print_section 'Format'
+	log_step 'formatting tracked shell scripts'
+	run_shfmt -w "${shell_files[@]}"
+	log_ok 'formatting completed'
 }
 
 main "$@"

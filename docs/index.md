@@ -9,14 +9,20 @@ Use this page as the operator map for the repo.
 - shortest commands: `docs/cheatsheet.md`
 - topology and routing: `docs/homelab.md`
 
+## Working Styles
+
+- local repo workflow on your machine
+- local repo deploying to a remote host with `deploy`
+- cloned repo on the remote host, then run the same lifecycle commands there
+
 ## Common Jobs
 
 | Job | Read | Run |
 | --- | --- | --- |
-| Bring up a host | `docs/getting-started.md` | `doctor -> setup -> validate-config -> up -> health` |
-| Refresh rendered config | `docs/getting-started.md` | `refresh-config -> validate-config -> up -> health` |
-| Deploy to a remote host | `docs/getting-started.md` | `install-ssh-key -> sync -> deploy` |
-| Manage Cloudflare DNS | `dns/README.md` | `install-dnscontrol -> dnscontrol preview -> dnscontrol push` |
+| Bring up a host | `docs/getting-started.md` | `doctor -> deploy` |
+| Refresh tracked config | `docs/getting-started.md` | `deploy` |
+| Deploy to a remote host | `docs/getting-started.md` | `install-ssh-key -> deploy --remote` |
+| Manage Cloudflare DNS | `dns/README.md` | `helpers/install-dnscontrol -> dnscontrol preview -> dnscontrol push` |
 | Join or migrate a tailnet client | `docs/tailscale.md` | create pre-auth key -> `tailscale up` |
 
 ## Core Docs
@@ -49,3 +55,4 @@ Use this page as the operator map for the repo.
 - keep stack docs focused on what is specific to that stack
 - link to related docs instead of repeating the same workflow everywhere
 - prefer short, operational, high-signal prose
+- keep helper-only scripts under `bin/helpers/` and document them as secondary tools

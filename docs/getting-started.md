@@ -2,13 +2,23 @@
 
 This is the canonical operator workflow for the repo.
 
+## Choose A Working Style
+
+You can operate the repo in three simple ways:
+
+- local repo on your machine, then run the host lifecycle commands directly
+- local repo on your machine, then use `deploy` to sync and run the remote workflow over SSH
+- cloned repo on the remote host, then run the same lifecycle commands there
+
+The lifecycle stays the same. Only where you run it changes.
+
 ## First Bring-Up
 
 Use this when bringing up a host for the first time or after setting up a new
 machine.
 
 ```text
-doctor -> setup -> validate-config -> up -> health
+doctor -> deploy
 ```
 
 Example:
@@ -16,40 +26,46 @@ Example:
 ```bash
 cp stacks/cerberus/.env.example stacks/cerberus/.env
 ./bin/doctor.sh cerberus
-./bin/setup.sh cerberus
-./bin/validate-config.sh cerberus
-./bin/up.sh cerberus
-./bin/health.sh cerberus
+./bin/deploy.sh cerberus
 ```
 
 What each step does:
 
 - `doctor` checks local tools, DNS tooling, and optional host env drift
-- `setup` creates runtime directories, stack-local `.env` files, and missing rendered config
-- `validate-config` checks shell syntax, Compose config, and rendered app config
-- `up` reconciles the enabled stacks for that host
-- `health` checks running services plus the public endpoints that matter
+- `deploy` runs `setup --refresh`, `validate-config`, `up`, and `health`
 
-## Refresh Tracked Config
+## Normal Deploy
 
-Use this after changing tracked templates, public hostnames, or other values
-that should change rendered local config on an existing host.
+Use this after changing tracked templates, public hostnames, or other values.
 
 ```text
-refresh-config -> validate-config -> up -> health
+deploy
 ```
 
 Example:
 
 ```bash
-./bin/refresh-config.sh cerberus
+./bin/deploy.sh cerberus
+```
+
+`deploy` is the main operator command. It refreshes tracked config, validates
+it, reconciles the stack, and checks health.
+
+## Manual Lifecycle
+
+Use the lower-level commands only when you want to inspect or control each step
+yourself.
+
+```text
+setup --refresh -> validate-config -> up -> health
+```
+
+```bash
+./bin/setup.sh --refresh cerberus
 ./bin/validate-config.sh cerberus
 ./bin/up.sh cerberus
 ./bin/health.sh cerberus
 ```
-
-`refresh-config` removes rendered template outputs for the enabled stacks, then
-reruns `setup`. It does not remove runtime data.
 
 ## Local Stack Debugging
 
@@ -74,22 +90,34 @@ Use SSH plus `rsync` when you want to manage a remote host from your local copy
 of the repo without cloning on the server.
 
 ```text
-install-ssh-key -> sync -> deploy
+helpers/install-ssh-key -> deploy --remote
 ```
 
 Example:
 
 ```bash
-./bin/install-ssh-key.sh root@cerberus.raulcorreia.dev
-./bin/sync.sh root@cerberus.raulcorreia.dev infra
-./bin/deploy.sh root@cerberus.raulcorreia.dev cerberus infra
+./bin/helpers/install-ssh-key.sh root@cerberus.raulcorreia.dev
+./bin/deploy.sh --remote root@cerberus.raulcorreia.dev cerberus
 ```
 
 Notes:
 
-- `sync` copies tracked repo files and skips remote-local secrets, rendered config, and runtime data
-- `deploy` already runs `sync`, `doctor`, `refresh-config`, `validate-config`, `up`, and `health` on the remote host
+- `deploy --remote` syncs the repo, then runs `deploy` on the remote host
+- use `./bin/helpers/sync.sh` directly only when you want to push files without running the remote workflow
 - keep files like `stacks/<host>/.env`, `dns/.env`, and `dns/creds.json` local to the remote machine
+
+## Run Directly On The Remote Host
+
+If you prefer to clone the repo on the remote host and work there, use the same
+lifecycle commands directly on that machine:
+
+```bash
+git pull
+./bin/doctor.sh cerberus
+./bin/deploy.sh cerberus
+```
+
+This is often the simplest path when you are already logged into the host.
 
 ## Stop And Cleanup
 

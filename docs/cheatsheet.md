@@ -2,38 +2,53 @@
 
 Shortest useful commands for the current repo.
 
+## Working Styles
+
+- local: run the lifecycle commands directly from your local repo
+- remote deploy: use `./bin/deploy.sh ...`
+- cloned remote repo: `git pull`, then run the same lifecycle commands there
+
 ## Bring Up Cerberus
 
 ```bash
 cp stacks/cerberus/.env.example stacks/cerberus/.env
 ./bin/doctor.sh cerberus
-./bin/setup.sh cerberus
-./bin/validate-config.sh cerberus
-./bin/up.sh cerberus
-./bin/health.sh cerberus
+./bin/deploy.sh cerberus
 ```
 
-## Refresh Cerberus Config
+## Deploy Cerberus
 
 ```bash
-./bin/refresh-config.sh cerberus
-./bin/validate-config.sh cerberus
-./bin/up.sh cerberus
-./bin/health.sh cerberus
+./bin/deploy.sh cerberus
 ```
 
 ## Remote Deploy
 
 ```bash
-./bin/install-ssh-key.sh root@cerberus.raulcorreia.dev
-./bin/sync.sh root@cerberus.raulcorreia.dev infra
-./bin/deploy.sh root@cerberus.raulcorreia.dev cerberus infra
+./bin/helpers/install-ssh-key.sh root@cerberus.raulcorreia.dev
+./bin/deploy.sh --remote root@cerberus.raulcorreia.dev cerberus
+```
+
+## Run On The Remote Host
+
+```bash
+git pull
+./bin/deploy.sh cerberus
+```
+
+## Manual Lifecycle
+
+```bash
+./bin/setup.sh --refresh cerberus
+./bin/validate-config.sh cerberus
+./bin/up.sh cerberus
+./bin/health.sh cerberus
 ```
 
 ## DNS
 
 ```bash
-./bin/install-dnscontrol.sh
+./bin/helpers/install-dnscontrol.sh
 ./bin/dnscontrol preview
 ./bin/dnscontrol push
 ```

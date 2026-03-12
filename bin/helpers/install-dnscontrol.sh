@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+ROOT_DIR="$(cd -- "${SCRIPT_DIR}/../.." && pwd)"
 # shellcheck source=bin/lib/common.sh
 . "${ROOT_DIR}/bin/lib/common.sh"
 
@@ -13,7 +13,7 @@ TEMP_DIR=""
 
 usage() {
 	cat <<'EOF'
-Usage: bin/install-dnscontrol.sh
+Usage: bin/helpers/install-dnscontrol.sh
 
 Download the pinned DNSControl release into tools/dnscontrol/.
 
@@ -67,7 +67,7 @@ verify_checksum() {
 		return
 	fi
 
-	printf 'warning: skipping checksum verification (no sha256sum or shasum)\n' >&2
+	log_warn 'skipping checksum verification (no sha256sum or shasum)'
 }
 
 cleanup() {
@@ -87,6 +87,9 @@ main() {
 	require_command tar
 	detect_platform
 
+	print_section 'Install DNSControl'
+	log_step "installing dnscontrol ${DNSCONTROL_VERSION}"
+
 	local release_url="https://github.com/StackExchange/dnscontrol/releases/download/v${DNSCONTROL_VERSION}"
 	local archive_url="${release_url}/${DNSCONTROL_ASSET}"
 	local checksums_url="${release_url}/checksums.txt"
@@ -98,7 +101,7 @@ main() {
 	verify_checksum "${TEMP_DIR}/${DNSCONTROL_ASSET}" "${TEMP_DIR}/checksums.txt"
 	tar -xzf "${TEMP_DIR}/${DNSCONTROL_ASSET}" -C "$INSTALL_DIR" dnscontrol
 	chmod +x "$INSTALL_PATH"
-	printf 'installed dnscontrol %s at %s\n' "$DNSCONTROL_VERSION" "${INSTALL_PATH#"${ROOT_DIR}/"}"
+	log_ok "installed dnscontrol ${DNSCONTROL_VERSION} at ${INSTALL_PATH#"${ROOT_DIR}/"}"
 }
 
 main "$@"

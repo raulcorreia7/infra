@@ -12,7 +12,7 @@ This directory is the source of truth for the Cloudflare DNS zone for
 ## Local Setup
 
 ```bash
-./bin/install-dnscontrol.sh
+./bin/helpers/install-dnscontrol.sh
 cp dns/.env.example dns/.env
 cp dns/creds.json.example dns/creds.json
 ./bin/doctor.sh

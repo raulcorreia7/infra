@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+ROOT_DIR="$(cd -- "${SCRIPT_DIR}/../.." && pwd)"
 # shellcheck source=bin/lib/common.sh
 . "${ROOT_DIR}/bin/lib/common.sh"
 
@@ -13,7 +13,7 @@ GENERATE_KEY=false
 
 usage() {
 	cat <<'EOF'
-Usage: bin/install-ssh-key.sh [options] [user@]host
+Usage: bin/helpers/install-ssh-key.sh [options] [user@]host
 
 Install a local public SSH key on a remote server for passwordless access.
 
@@ -24,9 +24,9 @@ Options:
   -h, --help        Show this help.
 
 Examples:
-  bin/install-ssh-key.sh root@example.com
-  bin/install-ssh-key.sh -p 2222 user@host
-  bin/install-ssh-key.sh -k ~/.ssh/id_ed25519.pub root@cerberus
+  bin/helpers/install-ssh-key.sh root@example.com
+  bin/helpers/install-ssh-key.sh -p 2222 user@host
+  bin/helpers/install-ssh-key.sh -k ~/.ssh/id_ed25519.pub root@cerberus
 EOF
 }
 
@@ -123,13 +123,16 @@ main() {
 	require_command ssh
 	ensure_public_key
 
+	print_section 'Install SSH Key'
+	log_step "installing ${PUBLIC_KEY_PATH} on ${SSH_TARGET}"
+
 	if command -v ssh-copy-id >/dev/null 2>&1; then
 		install_with_ssh_copy_id
 	else
 		install_with_ssh
 	fi
 
-	printf 'installed %s on %s\n' "$PUBLIC_KEY_PATH" "$SSH_TARGET"
+	log_ok "installed ${PUBLIC_KEY_PATH} on ${SSH_TARGET}"
 }
 
 main "$@"

@@ -26,17 +26,17 @@ EOF
 }
 
 report_ok() {
-	printf 'ok: %s\n' "$1"
+	log_ok "$1"
 }
 
 report_warn() {
 	WARN_COUNT=$((WARN_COUNT + 1))
-	printf 'warn: %s\n' "$1"
+	log_warn "$1"
 }
 
 report_fail() {
 	FAIL_COUNT=$((FAIL_COUNT + 1))
-	printf 'fail: %s\n' "$1"
+	log_fail "$1"
 }
 
 check_command() {
@@ -78,7 +78,7 @@ check_dns_tool() {
 	local binary_path="${ROOT_DIR}/tools/dnscontrol/dnscontrol"
 
 	if [[ ! -x "$binary_path" ]]; then
-		report_warn 'dnscontrol not installed; run ./bin/install-dnscontrol.sh'
+		report_warn 'dnscontrol not installed; run ./bin/helpers/install-dnscontrol.sh'
 		return
 	fi
 
@@ -138,7 +138,7 @@ main() {
 		return
 	fi
 
-	printf '== core ==\n'
+	print_section 'Core'
 	check_command git 'needed for tracked-file workflows'
 	check_command docker 'needed for compose, validation, and tool fallbacks'
 	check_docker_compose
@@ -146,16 +146,16 @@ main() {
 	check_command openssl 'needed for generated secrets and TLS helpers'
 	check_command envsubst 'needed for template rendering'
 
-	printf '\n== quality ==\n'
+	print_section 'Quality'
 	check_optional_with_docker_fallback shellcheck
 	check_optional_with_docker_fallback shfmt
 
-	printf '\n== dns ==\n'
+	print_section 'DNS'
 	check_dns_tool
 	check_dns_files
 
 	if [[ -n "$HOST_NAME" ]]; then
-		printf '\n== host ==\n'
+		print_section 'Host'
 		set_host_paths
 		if [[ -f "$ENV_FILE" ]]; then
 			report_ok "${ENV_FILE#"${ROOT_DIR}/"} present"
@@ -165,7 +165,7 @@ main() {
 		fi
 	fi
 
-	printf '\nsummary: %s failure(s), %s warning(s)\n' "$FAIL_COUNT" "$WARN_COUNT"
+	printf -- '\nsummary: %s failure(s), %s warning(s)\n' "$FAIL_COUNT" "$WARN_COUNT"
 	if [[ "$FAIL_COUNT" -gt 0 ]]; then
 		exit 1
 	fi

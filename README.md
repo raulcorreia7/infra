@@ -10,39 +10,48 @@ The repo is meant to feel boring in a good way:
 - plain `docker compose` still works inside each stack directory
 - public traffic follows `Internet -> Caddy -> internal service`
 
+## Working Styles
+
+Use whichever style fits the job:
+
+- local repo on your machine, running the lifecycle commands directly
+- local repo on your machine, deploying to a remote host with `deploy`
+- cloned repo on the remote host, then running the same lifecycle commands there
+
 ## Operator Flows
 
-First bring-up:
+First bring-up on the current machine:
 
 ```bash
+cp stacks/cerberus/.env.example stacks/cerberus/.env
 ./bin/doctor.sh cerberus
-./bin/setup.sh cerberus
-./bin/validate-config.sh cerberus
-./bin/up.sh cerberus
-./bin/health.sh cerberus
+./bin/deploy.sh cerberus
 ```
 
 Tracked template or hostname change:
 
 ```bash
-./bin/refresh-config.sh cerberus
-./bin/validate-config.sh cerberus
-./bin/up.sh cerberus
-./bin/health.sh cerberus
+./bin/deploy.sh cerberus
 ```
 
 Remote deploy:
 
 ```bash
-./bin/install-ssh-key.sh root@cerberus.raulcorreia.dev
-./bin/sync.sh root@cerberus.raulcorreia.dev infra
-./bin/deploy.sh root@cerberus.raulcorreia.dev cerberus infra
+./bin/helpers/install-ssh-key.sh root@cerberus.raulcorreia.dev
+./bin/deploy.sh --remote root@cerberus.raulcorreia.dev cerberus
+```
+
+Same workflow after cloning on the remote host:
+
+```bash
+git pull
+./bin/deploy.sh cerberus
 ```
 
 DNS change:
 
 ```bash
-./bin/install-dnscontrol.sh
+./bin/helpers/install-dnscontrol.sh
 ./bin/dnscontrol preview
 ./bin/dnscontrol push
 ```
@@ -68,42 +77,48 @@ Current public names:
 - `tailscale.cerberus.raulcorreia.dev` -> temporary compatibility alias
 - `*.home.arpa` -> private homelab names over the tailnet and homelab DNS path
 
-## Command Groups
+## Core Commands
 
-Bootstrap:
+Daily workflow:
 
 - `./bin/doctor.sh [host]`
-- `./bin/install-ssh-key.sh [user@]host`
-- `./bin/install-dnscontrol.sh`
-
-Host lifecycle:
-
-- `./bin/setup.sh <host>`
-- `./bin/validate-config.sh <host>`
-- `./bin/up.sh <host>`
-- `./bin/health.sh <host>`
+- `./bin/deploy.sh <host>`
+- `./bin/deploy.sh --remote [user@]host <host> [--path path]`
 - `./bin/logs.sh <host> [stack]`
 - `./bin/down.sh <host>`
 - `./bin/teardown.sh <host>`
 - `./bin/teardown.sh --remove <host>`
 
-Maintenance:
-
-- `./bin/refresh-config.sh <host>`
-
-Remote deploy:
-
-- `./bin/sync.sh [user@]host [remote-path]`
-- `./bin/deploy.sh [user@]host <host> [remote-path]`
-
-DNS:
+Remote and DNS:
 
 - `./bin/dnscontrol <command>`
 
+## Helper Commands
+
+Helper-only scripts live under `bin/helpers/` so the main `bin/` surface stays
+focused on day-to-day operator commands.
+
+Bootstrap and one-time setup:
+
+- `./bin/helpers/install-ssh-key.sh [user@]host`
+- `./bin/helpers/install-dnscontrol.sh`
+
+Advanced manual lifecycle:
+
+- `./bin/setup.sh <host>`
+- `./bin/setup.sh --refresh <host>`
+- `./bin/validate-config.sh <host>`
+- `./bin/up.sh <host>`
+- `./bin/health.sh <host>`
+
+Advanced remote helper:
+
+- `./bin/helpers/sync.sh [user@]host [--path path]`
+
 Quality:
 
-- `./bin/fmt.sh`
-- `./bin/lint.sh`
+- `./bin/helpers/fmt.sh`
+- `./bin/helpers/lint.sh`
 
 ## Plain Compose
 

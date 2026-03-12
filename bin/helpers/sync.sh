@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+ROOT_DIR="$(cd -- "${SCRIPT_DIR}/../.." && pwd)"
 # shellcheck source=bin/lib/common.sh
 . "${ROOT_DIR}/bin/lib/common.sh"
 
@@ -12,25 +12,31 @@ REMOTE_PATH=""
 
 usage() {
 	cat <<'EOF'
-Usage: bin/sync.sh [options] [user@]host [remote-path]
+Usage: bin/helpers/sync.sh [options] [user@]host
 
 Sync the tracked repo contents to a remote host over SSH using rsync.
 Remote local env files, credentials, rendered config, and runtime data are left
 in place.
 
 Options:
+      --path PATH    Remote repo path (default: infra).
   -p, --port PORT   SSH port (default: 22).
   -h, --help        Show this help.
 
 Examples:
-  bin/sync.sh root@cerberus
-  bin/sync.sh -p 2222 root@example.com /opt/infra
+  bin/helpers/sync.sh root@cerberus.raulcorreia.dev
+  bin/helpers/sync.sh --path /opt/infra root@example.com
 EOF
 }
 
 parse_args() {
 	while [[ "$#" -gt 0 ]]; do
 		case "$1" in
+		--path)
+			[[ "$#" -ge 2 ]] || fail "missing value for $1"
+			REMOTE_PATH="$2"
+			shift 2
+			;;
 		-p | --port)
 			[[ "$#" -ge 2 ]] || fail "missing value for $1"
 			SSH_PORT="$2"
@@ -46,12 +52,6 @@ parse_args() {
 		*)
 			if [[ -z "$SSH_TARGET" ]]; then
 				SSH_TARGET="$1"
-				shift
-				continue
-			fi
-
-			if [[ -z "$REMOTE_PATH" ]]; then
-				REMOTE_PATH="$1"
 				shift
 				continue
 			fi

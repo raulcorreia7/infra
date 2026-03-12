@@ -7,7 +7,7 @@ BINARY_PATH="${ROOT_DIR}/tools/dnscontrol/dnscontrol"
 DNS_DIR="${ROOT_DIR}/dns"
 
 if [[ ! -x "$BINARY_PATH" ]]; then
-	printf 'error: missing %s; run ./bin/install-dnscontrol.sh first\n' "${BINARY_PATH#"${ROOT_DIR}/"}" >&2
+	printf 'error: missing %s; run ./bin/helpers/install-dnscontrol.sh first\n' "${BINARY_PATH#"${ROOT_DIR}/"}" >&2
 	exit 1
 fi
 

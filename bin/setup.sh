@@ -6,20 +6,49 @@ ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 # shellcheck source=bin/lib/common.sh
 . "${ROOT_DIR}/bin/lib/common.sh"
 
-HOST_NAME="${1:-}"
+HOST_NAME=""
 HOST_DIR=""
 ENV_FILE=""
+REFRESH_MODE=false
 declare -a ENABLED_STACKS=()
 
 usage() {
 	cat <<'EOF'
-Usage: bin/setup.sh <host>
+Usage: bin/setup.sh [--refresh] <host>
 
 Prepare one host for running enabled Docker Compose stacks.
 
 Options:
+  --refresh  Re-render tracked template outputs before setup runs.
   -h, --help Show this help.
 EOF
+}
+
+parse_args() {
+	while [[ "$#" -gt 0 ]]; do
+		case "$1" in
+		--refresh)
+			REFRESH_MODE=true
+			shift
+			;;
+		-h | --help)
+			usage
+			exit 0
+			;;
+		-*)
+			fail "unknown option: $1"
+			;;
+		*)
+			if [[ -z "$HOST_NAME" ]]; then
+				HOST_NAME="$1"
+				shift
+				continue
+			fi
+
+			fail "unexpected argument: $1"
+			;;
+		esac
+	done
 }
 
 update_host_env_var() {
@@ -192,6 +221,9 @@ prepare_stack() {
 
 	[[ -d "$stack_directory" ]] || fail "missing stack directory: ${stack_directory}"
 	log_step "preparing ${stack_name}"
+	if [[ "$REFRESH_MODE" == true ]]; then
+		remove_stack_rendered_files "$stack_name"
+	fi
 	ensure_stack_directories "$stack_name" "$stack_directory"
 	sync_stack_compose_env "$stack_directory"
 
@@ -205,10 +237,7 @@ prepare_stack() {
 }
 
 main() {
-	if is_help_flag "$HOST_NAME"; then
-		usage
-		return
-	fi
+	parse_args "$@"
 
 	if [[ -z "$HOST_NAME" ]]; then
 		usage >&2
@@ -232,7 +261,11 @@ main() {
 	require_docker_compose
 
 	print_section "Setup"
-	log_step "preparing ${HOST_NAME}"
+	if [[ "$REFRESH_MODE" == true ]]; then
+		log_step "preparing ${HOST_NAME} with refreshed rendered config"
+	else
+		log_step "preparing ${HOST_NAME}"
+	fi
 	ensure_edge_network
 
 	local stack_name=""
