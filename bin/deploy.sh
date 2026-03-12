@@ -81,10 +81,16 @@ main() {
 		REMOTE_PATH='infra'
 	fi
 
+	print_section "Deploy"
+	log_step "deploying ${HOST_NAME} to ${SSH_TARGET}:${REMOTE_PATH}"
+
 	"${ROOT_DIR}/bin/sync.sh" -p "$SSH_PORT" "$SSH_TARGET" "$REMOTE_PATH"
 
+	log_step "running remote workflow for ${HOST_NAME}"
 	ssh -p "$SSH_PORT" "$SSH_TARGET" \
 		"cd \"$REMOTE_PATH\" && ./bin/doctor.sh \"$HOST_NAME\" && ./bin/refresh-config.sh \"$HOST_NAME\" && ./bin/validate-config.sh \"$HOST_NAME\" && ./bin/up.sh \"$HOST_NAME\" && ./bin/health.sh \"$HOST_NAME\""
+
+	log_ok "deploy completed for ${HOST_NAME}"
 }
 
 main "$@"

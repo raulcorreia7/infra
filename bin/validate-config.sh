@@ -6,7 +6,7 @@ ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 # shellcheck source=bin/lib/common.sh
 . "${ROOT_DIR}/bin/lib/common.sh"
 
-HOST_NAME="${1:-cerberus}"
+HOST_NAME="${1:-}"
 HOST_DIR=""
 ENV_FILE=""
 declare -a ENABLED_STACKS=()
@@ -15,10 +15,10 @@ TEMP_DIR=""
 
 usage() {
 	cat <<'EOF'
-Usage: bin/validate-config.sh [host]
+Usage: bin/validate-config.sh <host>
 
-Run preflight validation for rendered templates, shell scripts, and Compose
-config. Defaults to `cerberus` when no host is provided.
+Run preflight validation for one host's rendered templates, shell scripts, and
+Compose config.
 
 Options:
   -h, --help Show this help.
@@ -119,6 +119,12 @@ main() {
 		usage
 		return
 	fi
+
+	if [[ -z "$HOST_NAME" ]]; then
+		usage >&2
+		exit 1
+	fi
+
 	set_host_paths
 	load_validation_env
 	warn_missing_env_example_keys

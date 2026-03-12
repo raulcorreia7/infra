@@ -120,39 +120,36 @@ Client note:
 
 ## Admin Tasks
 
-Generate a Headscale API key:
+Common operator tasks live in `docs/tailscale.md`.
+
+Most admin work starts here:
 
 ```bash
-docker compose -f stacks/<host>/headscale_vpn/compose.yaml exec headscale \
-  headscale apikeys create --expiration 90d
+cd stacks/<host>/headscale_vpn
 ```
 
-Create a user:
+Examples you will usually want:
 
 ```bash
-docker compose -f stacks/<host>/headscale_vpn/compose.yaml exec headscale \
-  headscale users create alice
+docker compose exec headscale headscale users list
+docker compose exec headscale headscale nodes list
+docker compose exec headscale headscale apikeys list
 ```
 
 Create a reusable pre-auth key:
 
 ```bash
-docker compose -f stacks/<host>/headscale_vpn/compose.yaml exec headscale \
-  headscale preauthkeys create --user alice --reusable --expiration 24h
+docker compose exec headscale \
+  headscale preauthkeys create --user <user> --reusable --expiration 24h
 ```
 
-Enroll a client with that key:
+For quick client onboarding and migration to `vpn.raulcorreia.dev`, use
+`docs/tailscale.md`.
+
+Client example:
 
 ```bash
 tailscale up --login-server https://<PUBLIC_FQDN> --authkey tskey-...
-```
-
-Interactive enrollment is also possible:
-
-```bash
-tailscale up --login-server https://<PUBLIC_FQDN>
-docker compose -f stacks/<host>/headscale_vpn/compose.yaml exec headscale \
-  headscale nodes register --user alice --key <machine-key>
 ```
 
 ## Data Locations
@@ -172,6 +169,7 @@ file-backed policy later if you want it.
 
 ## Related Docs
 
+- `docs/tailscale.md` for client quick start and migration to `vpn.raulcorreia.dev`
 - `docs/homelab.md` for tailnet and network context
 - `docs/getting-started.md` for setup workflow
 - `stacks/cerberus/reverse_proxy/README.md` for public routing

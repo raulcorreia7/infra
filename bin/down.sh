@@ -39,14 +39,19 @@ main() {
 	load_enabled_stacks
 
 	if [[ "${#ENABLED_STACKS[@]}" -eq 0 ]]; then
-		printf 'no enabled stacks for host %s\n' "$HOST_NAME"
+		log_step "no enabled stacks for ${HOST_NAME}"
 		return
 	fi
 
 	require_command docker
 	require_docker_compose
 
+	print_section "Down"
+	log_step "stopping ${HOST_NAME}"
+
+	# shellcheck disable=SC2119
 	stop_enabled_stacks
+	log_ok "host is down: ${HOST_NAME}"
 }
 
 main "$@"

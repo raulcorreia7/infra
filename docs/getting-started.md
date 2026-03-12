@@ -1,127 +1,133 @@
 # Getting Started
 
-This is the shortest path from a fresh clone to a running host.
+This is the canonical operator workflow for the repo.
 
-## Table Of Contents
+## First Bring-Up
 
-- [Workflow](#workflow)
-- [Bring Up A Host](#bring-up-a-host)
-- [Host Model](#host-model)
-- [Remote Deploy](#remote-deploy)
-- [Current Hosts](#current-hosts)
-- [Add A Host](#add-a-host)
-- [Athena References](#athena-references)
-
-## Workflow
+Use this when bringing up a host for the first time or after setting up a new
+machine.
 
 ```text
-ssh key -> doctor -> host env -> setup -> validate-config -> review -> up -> health
-                                                                \-> teardown
+doctor -> setup -> validate-config -> up -> health
 ```
 
-## Bring Up A Host
+Example:
 
-1. Copy `stacks/<host>/.env.example` to `stacks/<host>/.env`.
-2. Fill in the host values.
-3. Run `./bin/doctor.sh`.
-4. Confirm the host has the stack folders you want enabled.
-5. Run `./bin/setup.sh <host>`.
-6. Run `./bin/validate-config.sh <host>`.
-7. Review the rendered local config files.
-8. Run `./bin/up.sh <host>`.
-9. Run `./bin/health.sh <host>`.
+```bash
+cp stacks/cerberus/.env.example stacks/cerberus/.env
+./bin/doctor.sh cerberus
+./bin/setup.sh cerberus
+./bin/validate-config.sh cerberus
+./bin/up.sh cerberus
+./bin/health.sh cerberus
+```
 
-For cleanup:
+What each step does:
 
-- `./bin/down.sh <host>` stops enabled stacks
-- `./bin/teardown.sh <host>` removes stack resources
-- `./bin/teardown.sh --remove <host>` also removes images and rendered local files
+- `doctor` checks local tools, DNS tooling, and optional host env drift
+- `setup` creates runtime directories, stack-local `.env` files, and missing rendered config
+- `validate-config` checks shell syntax, Compose config, and rendered app config
+- `up` reconciles the enabled stacks for that host
+- `health` checks running services plus the public endpoints that matter
+
+## Refresh Tracked Config
+
+Use this after changing tracked templates, public hostnames, or other values
+that should change rendered local config on an existing host.
+
+```text
+refresh-config -> validate-config -> up -> health
+```
+
+Example:
+
+```bash
+./bin/refresh-config.sh cerberus
+./bin/validate-config.sh cerberus
+./bin/up.sh cerberus
+./bin/health.sh cerberus
+```
+
+`refresh-config` removes rendered template outputs for the enabled stacks, then
+reruns `setup`. It does not remove runtime data.
 
 ## Local Stack Debugging
 
-After `setup`, each enabled stack gets a synced local `.env` file copied from
-`stacks/<host>/.env` using that stack's `stack.env.keys` allowlist. That means
-you can iterate with plain Compose from inside the stack directory without
-pulling every host variable into every stack:
+After `setup`, each enabled stack gets a generated local `.env` file with the
+stack's allowlisted values plus `COMPOSE_PROJECT_NAME`. That keeps plain
+`docker compose` usable inside the stack directory.
+
+Example:
 
 ```bash
 cp stacks/daedalus/.env.example stacks/daedalus/.env
 ./bin/setup.sh daedalus
+
 cd stacks/daedalus/komodo
 docker compose -f compose.yaml -f compose.local.yaml up -d
+docker compose -f compose.yaml -f compose.local.yaml logs -f
 ```
-
-Stacks that benefit from easy local debugging can ship a tracked
-`compose.local.yaml`. Use it explicitly when you want local ports or other
-developer-friendly overrides.
 
 ## Remote Deploy
 
-Use SSH plus `rsync` to push the repo to a server without cloning there:
+Use SSH plus `rsync` when you want to manage a remote host from your local copy
+of the repo without cloning on the server.
 
-```bash
-./bin/install-ssh-key.sh root@cerberus
-./bin/sync.sh root@cerberus infra
-./bin/deploy.sh root@cerberus cerberus infra
+```text
+install-ssh-key -> sync -> deploy
 ```
 
-`sync.sh` copies tracked repo files and skips remote-local secrets, rendered
-config, and runtime data. Keep files like `stacks/<host>/.env`, `dns/.env`, and
-`dns/creds.json` on the remote host.
-
-If tracked templates change and you want to re-render them without touching
-runtime data, use:
+Example:
 
 ```bash
-./bin/refresh-config.sh cerberus
+./bin/install-ssh-key.sh root@cerberus.raulcorreia.dev
+./bin/sync.sh root@cerberus.raulcorreia.dev infra
+./bin/deploy.sh root@cerberus.raulcorreia.dev cerberus infra
 ```
 
-## Host Model
+Notes:
 
-- `stacks/<host>/.env` is the source of truth for host-specific values
-- `stacks/<host>/<stack>/compose.yaml` means the stack is enabled
-- `*.template*` files render once when missing
-- `*.example*` files copy once when missing
-- Existing rendered or copied local files are never overwritten
+- `sync` copies tracked repo files and skips remote-local secrets, rendered config, and runtime data
+- `deploy` already runs `sync`, `doctor`, `refresh-config`, `validate-config`, `up`, and `health` on the remote host
+- keep files like `stacks/<host>/.env`, `dns/.env`, and `dns/creds.json` local to the remote machine
 
-Host-specific notes should live with the host or stack README instead of being
-duplicated here.
+## Stop And Cleanup
 
-## Current Hosts
+Use the smallest cleanup step that matches the job.
 
-- `cerberus` is the active public edge and currently runs `reverse_proxy` and `headscale_vpn`
+```text
+logs -> down -> teardown -> teardown --remove
+```
+
+Commands:
+
+```bash
+./bin/logs.sh cerberus
+./bin/down.sh cerberus
+./bin/teardown.sh cerberus
+./bin/teardown.sh --remove cerberus
+```
+
+- `down` stops enabled stacks
+- `teardown` removes compose resources but keeps rendered config and bind-mounted data
+- `teardown --remove` also removes images and rendered runtime files
+
+## Hosts
+
+- `cerberus` is the active public edge and runs `reverse_proxy` plus `headscale_vpn`
 - `athena` is the Proxmox hypervisor host
 - `daedalus` is the internal Docker app host VM
 - `chronos` is the storage placeholder host
 
-Current name split:
+Current public names:
 
 - `vpn.raulcorreia.dev` for the public Headscale entrypoint
 - `tailscale.cerberus.raulcorreia.dev` as a temporary compatibility alias
-- `*.home.arpa` for private host and service access
+- `*.home.arpa` for private homelab access
 - future public `*.raulcorreia.dev` apps through Cerberus
 
-For topology and routing, use `docs/homelab.md`.
+## Related Docs
 
-## Add A Host
-
-1. Create `stacks/<host>/`.
-2. Add `stacks/<host>/.env.example`.
-3. Add one folder per enabled stack under `stacks/<host>/`.
-4. Copy the example env to a local `.env`.
-5. Run `./bin/setup.sh <host>`.
-6. Add or update host docs if the host has a unique role.
-
-## Athena References
-
-`athena` remains the hypervisor. Create `daedalus` with the upstream Docker VM
-helper, then install Komodo inside the VM.
-
-For remote homelab access through the Athena subnet router, remember that Linux
-clients need `tailscale set --accept-routes`, while other major Tailscale
-clients accept subnet routes by default.
-
-- Docker VM helper: `https://community-scripts.org/scripts/docker-vm`
-- Komodo helper: `https://community-scripts.org/scripts/komodo`
-- Alpine LXC helper: `https://community-scripts.org/scripts/alpine`
-- Tailscale LXC helper: `https://community-scripts.org/scripts/add-tailscale-lxc`
+- `docs/cheatsheet.md` for the shortest commands
+- `docs/homelab.md` for topology and routing
+- `docs/tailscale.md` for client onboarding and migration

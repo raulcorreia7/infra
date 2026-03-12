@@ -75,6 +75,9 @@ main() {
 	require_command rsync
 	require_command ssh
 
+	print_section "Sync"
+	log_step "syncing repo to ${SSH_TARGET}:${REMOTE_PATH}"
+
 	rsync -az --delete \
 		-e "ssh -p ${SSH_PORT}" \
 		--exclude '.git/' \
@@ -89,7 +92,7 @@ main() {
 		--exclude 'tools/dnscontrol/dnscontrol' \
 		"${ROOT_DIR}/" "${SSH_TARGET}:${REMOTE_PATH}/"
 
-	printf 'synced repo to %s:%s\n' "$SSH_TARGET" "$REMOTE_PATH"
+	log_ok "synced repo to ${SSH_TARGET}:${REMOTE_PATH}"
 }
 
 main "$@"

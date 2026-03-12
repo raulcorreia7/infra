@@ -65,11 +65,18 @@ main() {
 	load_enabled_stacks
 
 	if [[ "${#ENABLED_STACKS[@]}" -eq 0 ]]; then
-		printf 'no enabled stacks for host %s\n' "$HOST_NAME"
+		log_step "no enabled stacks for ${HOST_NAME}"
 		return
 	fi
 
 	require_docker_compose
+
+	print_section "Teardown"
+	if [[ "$REMOVE_MODE" == true ]]; then
+		log_step "removing ${HOST_NAME} stacks, images, and rendered runtime files"
+	else
+		log_step "removing ${HOST_NAME} stack resources"
+	fi
 
 	if [[ "$REMOVE_MODE" == true ]]; then
 		stop_enabled_stacks --remove-orphans -v --rmi all
@@ -82,12 +89,13 @@ main() {
 		for stack_name in "${ENABLED_STACKS[@]}"; do
 			remove_stack_runtime_files "$stack_name"
 		done
-		printf 'stack images and rendered runtime files were removed\n'
+		log_ok 'stack images and rendered runtime files were removed'
 	else
-		printf 'bind-mounted data and rendered config files were left in place\n'
+		log_step 'bind-mounted data and rendered config files were left in place'
 	fi
 
 	remove_edge_network_if_unused
+	log_ok "teardown completed for ${HOST_NAME}"
 }
 
 main "$@"

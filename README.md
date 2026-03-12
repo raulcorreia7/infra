@@ -3,48 +3,116 @@
 Small homelab infra repo built around Docker Compose, Caddy, and host-first
 rendered config.
 
-Keep it boring:
+The repo is meant to feel boring in a good way:
 
-- host env is the source of truth
-- setup renders/copies local files once
-- after that, plain `docker compose` should still work inside each stack
+- `stacks/<host>/.env` is the source of truth
+- `setup` renders or copies local files only when needed
+- plain `docker compose` still works inside each stack directory
+- public traffic follows `Internet -> Caddy -> internal service`
 
-## Table Of Contents
+## Operator Flows
 
-- [What This Repo Does](#what-this-repo-does)
-- [Quick Start](#quick-start)
-- [Host Model](#host-model)
-- [Commands](#commands)
-- [Documentation](#documentation)
-
-## What This Repo Does
-
-- Keeps infra grouped by host under `stacks/`
-- Enables a stack only when `stacks/<host>/<stack>/compose.yaml` exists
-- Uses `stacks/<host>/.env` as the source of truth for host values
-- Renders local config once during `setup` and does not overwrite existing files
-- Syncs a filtered stack-local `.env` from `stack.env.keys` so direct Compose use stays simple without leaking unrelated values
-
-Rule of thumb:
-
-```text
-public traffic -> Caddy -> internal service
-```
-
-## Quick Start
-
-Bring up the current public host:
+First bring-up:
 
 ```bash
-./bin/doctor.sh
+./bin/doctor.sh cerberus
 ./bin/setup.sh cerberus
 ./bin/validate-config.sh cerberus
 ./bin/up.sh cerberus
 ./bin/health.sh cerberus
 ```
 
-For local iteration, `setup` also syncs the host env into each enabled stack so
-plain Compose still works:
+Tracked template or hostname change:
+
+```bash
+./bin/refresh-config.sh cerberus
+./bin/validate-config.sh cerberus
+./bin/up.sh cerberus
+./bin/health.sh cerberus
+```
+
+Remote deploy:
+
+```bash
+./bin/install-ssh-key.sh root@cerberus.raulcorreia.dev
+./bin/sync.sh root@cerberus.raulcorreia.dev infra
+./bin/deploy.sh root@cerberus.raulcorreia.dev cerberus infra
+```
+
+DNS change:
+
+```bash
+./bin/install-dnscontrol.sh
+./bin/dnscontrol preview
+./bin/dnscontrol push
+```
+
+Stop or remove a host:
+
+```bash
+./bin/down.sh cerberus
+./bin/teardown.sh cerberus
+./bin/teardown.sh --remove cerberus
+```
+
+## Current Hosts
+
+- `cerberus` is the public edge host
+- `athena` is the Proxmox hypervisor host
+- `daedalus` is the internal Docker app host VM
+- `chronos` is the storage placeholder host
+
+Current public names:
+
+- `vpn.raulcorreia.dev` -> canonical Headscale and Headplane URL
+- `tailscale.cerberus.raulcorreia.dev` -> temporary compatibility alias
+- `*.home.arpa` -> private homelab names over the tailnet and homelab DNS path
+
+## Command Groups
+
+Bootstrap:
+
+- `./bin/doctor.sh [host]`
+- `./bin/install-ssh-key.sh [user@]host`
+- `./bin/install-dnscontrol.sh`
+
+Host lifecycle:
+
+- `./bin/setup.sh <host>`
+- `./bin/validate-config.sh <host>`
+- `./bin/up.sh <host>`
+- `./bin/health.sh <host>`
+- `./bin/logs.sh <host> [stack]`
+- `./bin/down.sh <host>`
+- `./bin/teardown.sh <host>`
+- `./bin/teardown.sh --remove <host>`
+
+Maintenance:
+
+- `./bin/refresh-config.sh <host>`
+
+Remote deploy:
+
+- `./bin/sync.sh [user@]host [remote-path]`
+- `./bin/deploy.sh [user@]host <host> [remote-path]`
+
+DNS:
+
+- `./bin/dnscontrol <command>`
+
+Quality:
+
+- `./bin/fmt.sh`
+- `./bin/lint.sh`
+
+## Plain Compose
+
+After `setup`, each enabled stack gets a generated local `.env` file. That file
+includes both the stack's allowed env values and `COMPOSE_PROJECT_NAME`, so
+plain `docker compose` inside the stack directory uses the same host-scoped
+project name as the repo scripts.
+
+Example:
 
 ```bash
 cp stacks/daedalus/.env.example stacks/daedalus/.env
@@ -53,67 +121,11 @@ cd stacks/daedalus/komodo
 docker compose -f compose.yaml -f compose.local.yaml up -d
 ```
 
-`compose.local.yaml` is tracked for stacks that benefit from easy local
-debugging.
+## Where To Read Next
 
-Stop or remove it:
-
-```bash
-./bin/down.sh cerberus
-./bin/teardown.sh cerberus
-./bin/teardown.sh --remove cerberus
-```
-
-## Host Model
-
-- `cerberus` is the current public edge host
-- `athena` is the Proxmox hypervisor host
-- `daedalus` is the internal Docker app host VM
-- `chronos` is the storage placeholder host
-
-Current public DNS split:
-
-- `vpn.raulcorreia.dev` -> Headscale and Headplane
-- `tailscale.cerberus.raulcorreia.dev` -> temporary compatibility alias to `vpn.raulcorreia.dev`
-- `*.home.arpa` -> private hosts and services over the homelab/tailnet path
-- future public `*.raulcorreia.dev` apps -> Cerberus edge proxy
-
-The source of truth stays in `stacks/<host>/.env`. `setup` copies that env into
-each enabled stack as a filtered local `.env` based on `stack.env.keys` so
-direct `docker compose` usage stays simple without exposing the full host env to
-every stack.
-
-## Commands
-
-| Command | Purpose |
-| --- | --- |
-| `./bin/setup.sh <host>` | Render missing local config and create runtime directories |
-| `./bin/validate-config.sh <host>` | Validate templates and stack config |
-| `./bin/up.sh <host>` | Start enabled stacks |
-| `./bin/health.sh <host>` | Run host and stack health checks |
-| `./bin/down.sh <host>` | Stop enabled stacks |
-| `./bin/teardown.sh <host>` | Remove stack resources and unused host network state |
-| `./bin/teardown.sh --remove <host>` | Also remove images and rendered runtime files |
-| `./bin/logs.sh <host> [stack]` | Inspect logs |
-| `./bin/install-ssh-key.sh [user@]host` | Install your local public SSH key on a server |
-| `./bin/sync.sh [user@]host [remote-path]` | Sync the repo to a remote host over SSH |
-| `./bin/deploy.sh [user@]host <host> [remote-path]` | Sync and run the remote host workflow |
-| `./bin/refresh-config.sh <host>` | Re-render generated host config without touching runtime data |
-| `./bin/install-dnscontrol.sh` | Install the repo-local DNSControl binary |
-| `./bin/dnscontrol <command>` | Run DNSControl from `dns/` with local env loading |
-| `./bin/doctor.sh` | Validate core repo, quality, and DNS tooling |
-| `./bin/fmt.sh` | Format shell scripts |
-| `./bin/lint.sh` | Lint shell scripts |
-
-## Documentation
-
-Start at `docs/index.md`.
-
-- `docs/index.md` - doc map and navigation hub
-- `docs/cheatsheet.md` - shortest useful commands
-- `docs/getting-started.md` - setup flow and host workflow
-- `docs/homelab.md` - topology, routing, and network notes
-- `stacks/athena/README.md` - Athena host notes
-- `stacks/daedalus/README.md` - Daedalus host notes and planned stack inventory
-- `stacks/cerberus/reverse_proxy/README.md` - Cerberus Caddy notes
-- `stacks/cerberus/headscale_vpn/README.md` - Cerberus Headscale notes
+- `docs/index.md` for the operator map
+- `docs/getting-started.md` for the canonical bring-up workflow
+- `docs/cheatsheet.md` for the shortest useful commands
+- `docs/homelab.md` for topology and routing
+- `docs/tailscale.md` for Headscale quick start and client migration
+- `dns/README.md` for Cloudflare DNSControl workflow

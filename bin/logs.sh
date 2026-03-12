@@ -35,7 +35,7 @@ cleanup_logs() {
 
 follow_stack_logs() {
 	local stack_name="$1"
-	printf '===== %s =====\n' "$stack_name"
+	printf -- '\n== %s ==\n' "$stack_name"
 	run_compose "$stack_name" logs -f --tail 100 &
 	LOG_PIDS+=("$!")
 }
@@ -57,7 +57,7 @@ main() {
 	load_enabled_stacks
 
 	if [[ "${#ENABLED_STACKS[@]}" -eq 0 ]]; then
-		printf 'no enabled stacks for host %s\n' "$HOST_NAME"
+		log_step "no enabled stacks for ${HOST_NAME}"
 		return
 	fi
 
@@ -66,11 +66,15 @@ main() {
 
 	if [[ -n "$STACK_FILTER" ]]; then
 		is_enabled_stack "$STACK_FILTER" || fail "stack '${STACK_FILTER}' is not enabled for host ${HOST_NAME}"
+		print_section "Logs"
+		log_step "following ${STACK_FILTER} on ${HOST_NAME}"
 		run_compose "$STACK_FILTER" logs -f --tail 100
 		return
 	fi
 
 	trap cleanup_logs EXIT INT TERM
+	print_section "Logs"
+	log_step "following all stacks on ${HOST_NAME}"
 
 	local stack_name=""
 	for stack_name in "${ENABLED_STACKS[@]}"; do
