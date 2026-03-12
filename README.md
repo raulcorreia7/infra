@@ -96,6 +96,7 @@ every stack.
 Start at `docs/index.md`.
 
 - `docs/index.md` - doc map and navigation hub
+- `docs/cheatsheet.md` - shortest useful commands
 - `docs/getting-started.md` - setup flow and host workflow
 - `docs/homelab.md` - topology, routing, and network notes
 - `stacks/athena/README.md` - Athena host notes

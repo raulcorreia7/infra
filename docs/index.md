@@ -22,6 +22,7 @@ Use this page as the navigation hub for the repo docs.
 | File | Purpose |
 | --- | --- |
 | `README.md` | Repo overview, command surface, and entry points |
+| `docs/cheatsheet.md` | Shortest practical command reference |
 | `docs/getting-started.md` | Setup flow, host model, and bring-up workflow |
 | `docs/homelab.md` | Topology, routing, and location map |
 
