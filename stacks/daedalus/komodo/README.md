@@ -23,6 +23,14 @@ source of truth.
 - internal app services only
 - web access through `reverse_proxy`
 - expected hostname: `komodo.home.arpa`
+- local debug access can use `http://127.0.0.1:9120` with `compose.local.yaml`
+
+## Local Login
+
+- username comes from `KOMODO_INIT_ADMIN_USERNAME`
+- password comes from `KOMODO_INIT_ADMIN_PASSWORD`
+- both live in `stacks/daedalus/.env`
+- if the password is left as `change-me-*`, `./bin/setup.sh daedalus` generates it on first run
 
 For local debugging:
 

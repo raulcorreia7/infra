@@ -79,6 +79,7 @@ Quality commands:
 ## Version Policy
 
 - Prefer stable/latest channels over patch-pinned image tags when practical
+- Major-only tags like `caddy:2`, `postgres:17`, and `mongo:8` are preferred when a stable channel is not available
 - Avoid unnecessary patch pinning unless there is a concrete compatibility reason
 
 ## Durable Expectations
