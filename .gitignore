@@ -14,4 +14,5 @@ stacks/**/config/policy.yaml
 stacks/**/config/**/config.yaml
 
 # Generated stack state
+stacks/**/data/
 stacks/**/data/**

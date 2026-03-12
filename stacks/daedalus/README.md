@@ -21,6 +21,12 @@ It should own:
 - future runners
 - future media and photo stacks
 
+Database rule of thumb:
+
+- no DB unless the app needs one
+- SQLite when it is a good fit for a small homelab workload
+- per-stack Postgres only when the app clearly benefits from it
+
 ## Access Rule
 
 ```text

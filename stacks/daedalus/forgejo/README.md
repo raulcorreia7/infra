@@ -13,7 +13,7 @@ This is the first real app stack on `daedalus`.
 ## Owns
 
 - Forgejo
-- PostgreSQL
+- SQLite-backed app data
 - built-in Forgejo SSH server
 
 ## Exposure
@@ -34,7 +34,7 @@ docker compose -f compose.yaml -f compose.local.yaml up -d
 ## Durable State
 
 - `data/forgejo/` -> repos, attachments, indexes, app state
-- `data/postgres/` -> database state
+- `data/forgejo/forgejo.db` -> SQLite database
 - `config/app.ini` -> rendered local config
 
 ## Scope Now
@@ -42,6 +42,7 @@ docker compose -f compose.yaml -f compose.local.yaml up -d
 - web UI
 - repository hosting
 - Git over SSH
+- SQLite-backed persistence to keep the stack small and self-contained
 
 Deferred:
 

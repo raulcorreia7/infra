@@ -42,6 +42,9 @@ Repo-specific guidance for agents working in this infra repo.
 - Runtime state lives under `stacks/<host>/<stack>/data/`
 - Rendered local config lives under `stacks/<host>/<stack>/config/`
 - Keep bind mounts for important state; prefer visible on-disk data over opaque volumes
+- Prefer no external database unless the app clearly needs one
+- Prefer SQLite for small, single-user apps when it is a good fit
+- When a real database is needed, keep it inside the owning stack instead of sharing one giant DB by default
 - Reverse proxy state uses bind mounts too:
   - `data/caddy/`
   - `data/config/`
