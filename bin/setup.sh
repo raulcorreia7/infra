@@ -80,7 +80,9 @@ ensure_generated_host_secrets() {
 	)
 
 	for key in "${secrets[@]}"; do
-		ensure_generated_host_secret "$key"
+		if host_uses_env_key "$key"; then
+			ensure_generated_host_secret "$key"
+		fi
 	done
 }
 
@@ -154,10 +156,9 @@ ensure_stack_directories() {
 		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/headplane"
 		;;
 	forgejo)
-		mkdir -p "$stack_directory/data/forgejo" "$stack_directory/data/postgres" "$stack_directory/config"
+		mkdir -p "$stack_directory/data/forgejo" "$stack_directory/config"
 		chown 1000:1000 "$stack_directory/data/forgejo" >/dev/null 2>&1 || true
 		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/forgejo"
-		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/postgres"
 		;;
 	komodo)
 		mkdir -p "$stack_directory/data/postgres" "$stack_directory/data/ferretdb" "$stack_directory/data/backups" "$stack_directory/data/periphery"
@@ -213,8 +214,8 @@ main() {
 	set_host_paths
 	require_local_env_file
 	load_host_env
-	ensure_generated_host_secrets
 	load_enabled_stacks
+	ensure_generated_host_secrets
 
 	if [[ "${#ENABLED_STACKS[@]}" -eq 0 ]]; then
 		printf 'no enabled stacks for host %s\n' "$HOST_NAME"

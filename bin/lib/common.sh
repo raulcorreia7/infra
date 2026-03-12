@@ -72,6 +72,45 @@ load_enabled_stacks() {
 	done < <(find "$HOST_DIR" -mindepth 2 -maxdepth 2 -type f -name 'compose.yaml' | sort)
 }
 
+stack_uses_env_key() {
+	local stack_name="$1"
+	local key="$2"
+	local stack_directory=""
+	local keys_file=""
+	local template_file=""
+	local expected=""
+
+	stack_directory="$(stack_dir "$stack_name")"
+	keys_file="${stack_directory}/stack.env.keys"
+
+	if [[ -f "$keys_file" ]] && grep -qx "$key" "$keys_file"; then
+		return 0
+	fi
+
+	printf -v expected '\${%s}' "$key"
+
+	while IFS= read -r template_file; do
+		if grep -Fq "$expected" "$template_file"; then
+			return 0
+		fi
+	done < <(find "$stack_directory" -path "$stack_directory/data" -prune -o -type f \( -name '*.template' -o -name '*.template.*' \) -print)
+
+	return 1
+}
+
+host_uses_env_key() {
+	local key="$1"
+	local stack_name=""
+
+	for stack_name in "${ENABLED_STACKS[@]}"; do
+		if stack_uses_env_key "$stack_name" "$key"; then
+			return 0
+		fi
+	done
+
+	return 1
+}
+
 stack_dir() {
 	printf '%s/%s' "$HOST_DIR" "$1"
 }
