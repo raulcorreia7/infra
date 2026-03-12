@@ -76,6 +76,10 @@ stack_dir() {
 	printf '%s/%s' "$HOST_DIR" "$1"
 }
 
+stack_script_path() {
+	printf '%s/%s' "$(stack_dir "$1")" "$2"
+}
+
 run_compose() {
 	local stack_name="$1"
 	shift
@@ -144,8 +148,8 @@ target_path_for_example() {
 	local example_file="$1"
 
 	case "$example_file" in
-	*.example.yaml)
-		printf '%s.yaml' "${example_file%.example.yaml}"
+	*.example.*)
+		printf '%s' "${example_file/.example./.}"
 		;;
 	*.example)
 		printf '%s' "${example_file%.example}"
@@ -160,8 +164,8 @@ target_path_for_template() {
 	local template_file="$1"
 
 	case "$template_file" in
-	*.template.yaml)
-		printf '%s.yaml' "${template_file%.template.yaml}"
+	*.template.*)
+		printf '%s' "${template_file/.template./.}"
 		;;
 	*.template)
 		printf '%s' "${template_file%.template}"
@@ -217,13 +221,18 @@ remove_stack_runtime_files() {
 		printf 'cleared %s\n' "${stack_directory#"${ROOT_DIR}/"}/data"
 	fi
 
+	if [[ -f "$stack_directory/.env" ]]; then
+		rm -f "$stack_directory/.env"
+		printf 'removed %s\n' "${stack_directory#"${ROOT_DIR}/"}/.env"
+	fi
+
 	while IFS= read -r template_file; do
 		target_file="$(target_path_for_template "$template_file")"
 		if [[ -f "$target_file" ]]; then
 			rm -f "$target_file"
 			printf 'removed %s\n' "${target_file#"${ROOT_DIR}/"}"
 		fi
-	done < <(find "$stack_directory" -type f \( -name '*.template' -o -name '*.template.yaml' \) | sort)
+	done < <(find "$stack_directory" -type f \( -name '*.template' -o -name '*.template.*' \) | sort)
 
 	while IFS= read -r example_file; do
 		target_file="$(target_path_for_example "$example_file")"
@@ -231,5 +240,5 @@ remove_stack_runtime_files() {
 			rm -f "$target_file"
 			printf 'removed %s\n' "${target_file#"${ROOT_DIR}/"}"
 		fi
-	done < <(find "$stack_directory" -type f \( -name '*.example' -o -name '*.example.yaml' \) | sort)
+	done < <(find "$stack_directory" -type f \( -name '*.example' -o -name '*.example.*' \) | sort)
 }

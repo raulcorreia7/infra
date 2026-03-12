@@ -59,7 +59,6 @@ main() {
 	fi
 
 	require_command docker
-	require_docker_compose
 	set_host_paths
 	require_local_env_file
 	load_host_env
@@ -67,12 +66,15 @@ main() {
 
 	if [[ "${#ENABLED_STACKS[@]}" -eq 0 ]]; then
 		printf 'no enabled stacks for host %s\n' "$HOST_NAME"
+		return
+	fi
+
+	require_docker_compose
+
+	if [[ "$REMOVE_MODE" == true ]]; then
+		stop_enabled_stacks --remove-orphans -v --rmi all
 	else
-		if [[ "$REMOVE_MODE" == true ]]; then
-			stop_enabled_stacks --remove-orphans -v --rmi all
-		else
-			stop_enabled_stacks --remove-orphans -v
-		fi
+		stop_enabled_stacks --remove-orphans -v
 	fi
 
 	if [[ "$REMOVE_MODE" == true ]]; then

@@ -6,6 +6,7 @@
 # Host-local environment files
 stacks/*/.env
 !stacks/*/.env.example
+stacks/*/*/.env
 
 # Rendered and copied local config
 stacks/**/config/Caddyfile

@@ -33,8 +33,6 @@ main() {
 		exit 1
 	fi
 
-	require_command docker
-	require_docker_compose
 	set_host_paths
 	require_local_env_file
 	load_host_env
@@ -44,6 +42,9 @@ main() {
 		printf 'no enabled stacks for host %s\n' "$HOST_NAME"
 		return
 	fi
+
+	require_command docker
+	require_docker_compose
 
 	stop_enabled_stacks
 }

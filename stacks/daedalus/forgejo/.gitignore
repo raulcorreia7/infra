@@ -1,0 +1,5 @@
+config/app.ini
+data/**
+!data/.gitkeep
+!data/**/
+!data/**/.gitkeep

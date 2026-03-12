@@ -1,0 +1,4 @@
+services:
+  komodo:
+    ports:
+      - "9120:9120"

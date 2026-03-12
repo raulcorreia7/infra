@@ -22,6 +22,69 @@ Options:
 EOF
 }
 
+update_host_env_var() {
+	local key="$1"
+	local value="$2"
+	local temp_file=""
+	local line=""
+	local found=false
+
+	temp_file="$(mktemp)"
+
+	while IFS= read -r line || [[ -n "$line" ]]; do
+		if [[ "$line" == "${key}="* ]]; then
+			printf '%s=%s\n' "$key" "$value" >>"$temp_file"
+			found=true
+			continue
+		fi
+
+		printf '%s\n' "$line" >>"$temp_file"
+	done <"$ENV_FILE"
+
+	if [[ "$found" != true ]]; then
+		printf '%s=%s\n' "$key" "$value" >>"$temp_file"
+	fi
+
+	mv "$temp_file" "$ENV_FILE"
+}
+
+ensure_generated_host_secret() {
+	local key="$1"
+	local current_value="${!key:-}"
+	local generated_value=""
+
+	if [[ -n "$current_value" && "$current_value" != change-me-* ]]; then
+		return
+	fi
+
+	generated_value="$(openssl rand -hex 32)"
+	printf -v "$key" '%s' "$generated_value"
+	export "$key=$generated_value"
+	update_host_env_var "$key" "$generated_value"
+	printf 'generated %s in %s\n' "$key" "${ENV_FILE#"${ROOT_DIR}/"}"
+}
+
+ensure_generated_host_secrets() {
+	local key=""
+	local secrets=(
+		HEADPLANE_COOKIE_SECRET
+		KOMODO_DB_PASSWORD
+		KOMODO_PASSKEY
+		KOMODO_WEBHOOK_SECRET
+		KOMODO_JWT_SECRET
+		KOMODO_INIT_ADMIN_PASSWORD
+		FORGEJO_DB_PASSWORD
+		FORGEJO_SECRET_KEY
+		FORGEJO_INTERNAL_TOKEN
+		FORGEJO_JWT_SECRET
+		FORGEJO_LFS_JWT_SECRET
+	)
+
+	for key in "${secrets[@]}"; do
+		ensure_generated_host_secret "$key"
+	done
+}
+
 copy_example_file_once() {
 	local example_file="$1"
 	local target_file=""
@@ -31,6 +94,14 @@ copy_example_file_once() {
 
 	cp "$example_file" "$target_file"
 	printf 'created %s\n' "${target_file#"${ROOT_DIR}/"}"
+}
+
+sync_stack_compose_env() {
+	local stack_directory="$1"
+	local target_file="${stack_directory}/.env"
+
+	cp "$ENV_FILE" "$target_file"
+	printf 'synced %s\n' "${target_file#"${ROOT_DIR}/"}"
 }
 
 render_template_file_once() {
@@ -66,6 +137,19 @@ ensure_stack_directories() {
 		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/headscale"
 		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/headplane"
 		;;
+	forgejo)
+		mkdir -p "$stack_directory/data/forgejo" "$stack_directory/data/postgres" "$stack_directory/config"
+		chown 1000:1000 "$stack_directory/data/forgejo" >/dev/null 2>&1 || true
+		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/forgejo"
+		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/postgres"
+		;;
+	komodo)
+		mkdir -p "$stack_directory/data/mongo" "$stack_directory/data/mongo_config" "$stack_directory/data/backups" "$stack_directory/data/periphery"
+		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/mongo"
+		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/mongo_config"
+		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/backups"
+		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/periphery"
+		;;
 	reverse_proxy)
 		mkdir -p "$stack_directory/data/caddy" "$stack_directory/data/config"
 		printf 'ensured %s\n' "${stack_directory#"${ROOT_DIR}/"}/data/caddy"
@@ -88,14 +172,15 @@ prepare_stack() {
 
 	[[ -d "$stack_directory" ]] || fail "missing stack directory: ${stack_directory}"
 	ensure_stack_directories "$stack_name" "$stack_directory"
+	sync_stack_compose_env "$stack_directory"
 
 	while IFS= read -r template_file; do
 		render_template_file_once "$template_file"
-	done < <(find "$stack_directory" -type f \( -name '*.template' -o -name '*.template.yaml' \) | sort)
+	done < <(find "$stack_directory" -type f \( -name '*.template' -o -name '*.template.*' \) | sort)
 
 	while IFS= read -r example_file; do
 		copy_example_file_once "$example_file"
-	done < <(find "$stack_directory" -type f \( -name '*.example' -o -name '*.example.yaml' \) | sort)
+	done < <(find "$stack_directory" -type f \( -name '*.example' -o -name '*.example.*' \) | sort)
 }
 
 main() {
@@ -109,20 +194,22 @@ main() {
 		exit 1
 	fi
 
-	require_command docker
-	require_command envsubst
-	require_command openssl
-	require_docker_compose
 	set_host_paths
 	require_local_env_file
 	load_host_env
+	ensure_generated_host_secrets
 	load_enabled_stacks
-	ensure_edge_network
 
 	if [[ "${#ENABLED_STACKS[@]}" -eq 0 ]]; then
 		printf 'no enabled stacks for host %s\n' "$HOST_NAME"
 		return
 	fi
+
+	require_command docker
+	require_command envsubst
+	require_command openssl
+	require_docker_compose
+	ensure_edge_network
 
 	local stack_name=""
 	for stack_name in "${ENABLED_STACKS[@]}"; do

@@ -1,0 +1,5 @@
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    # internal only, expose via reverse_proxy
+    # mounts should separate media, config, cache, and transcodes

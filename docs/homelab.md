@@ -3,6 +3,17 @@
 Small public edge on `cerberus`. Internal services stay behind Caddy by
 default.
 
+## Table Of Contents
+
+- [Rule Of Thumb](#rule-of-thumb)
+- [Public Edge](#public-edge)
+- [Homelab Network](#homelab-network)
+- [Where Things Live](#where-things-live)
+- [Cerberus Routing](#cerberus-routing)
+- [Tailnet Defaults](#tailnet-defaults)
+- [Notes](#notes)
+- [Related Docs](#related-docs)
+
 ## Rule Of Thumb
 
 ```text
@@ -31,9 +42,14 @@ public traffic -> Caddy -> internal service
           |   | Caddy           |      | Headscale         |  |
           |   |                 |----->| Headplane (/admin)|  |
           |   '-----------------'      '-------------------'  |
-          '---------------------------------------------------'
+           '---------------------------------------------------'
                                     |
                              tailnet clients
+
+                         .----------------------.
+                         |      daedalus VM     |
+                         | Docker + Komodo/apps |
+                         '----------------------'
 ```
 
 ## Homelab Network
@@ -44,13 +60,15 @@ public traffic -> Caddy -> internal service
  | 192.168.178.1/24       |     | 192.168.100.1/24       |
  '------------------------'     '-----------+------------'
                                               |
-                    .----------+---------------+---------------+-------------.
-                    |          |               |               |             |
-            .-------v-------. .-v-----------. .-v---------. .--v----------. .-v----------.
-            | chronos       | | athena      | | talos     | | laptops /   | | access     |
-            | TrueNAS SCALE | | Proxmox     | | desktop   | | phone       | | point      |
-            '---------------' '-------------' '-----------' '-------------' '------------'
+                    .--------+---------------+---------------+---------------+-------------.
+                    |        |               |               |               |             |
+            .-------v-----. .-v-----------. .-v-----------. .-v---------. .--v----------. .-v----------.
+            | chronos     | | athena      | | daedalus    | | talos     | | laptops /   | | access     |
+            | TrueNAS     | | Proxmox     | | Docker VM   | | desktop   | | phone       | | point      |
+            '-------------' '-------------' '-------------' '-----------' '-------------' '------------'
 ```
+
+`athena` owns hypervisor concerns. `daedalus` is the Docker VM app host.
 
 ## Where Things Live
 
@@ -64,6 +82,10 @@ stacks/cerberus/reverse_proxy/data/          Caddy state
 stacks/cerberus/headscale_vpn/compose.yaml   Headscale + Headplane stack
 stacks/cerberus/headscale_vpn/config/        rendered app config
 stacks/cerberus/headscale_vpn/data/          Headscale and Headplane state
+
+stacks/athena/.env                           hypervisor-local values
+stacks/daedalus/.env                         Docker VM host values
+stacks/daedalus/*                            future app host stacks
 ```
 
 ## Cerberus Routing
@@ -95,3 +117,10 @@ firewall        hermes
 lan gateway     192.168.100.1/24
 isp upstream    192.168.178.1/24
 ```
+
+## Related Docs
+
+- `README.md` for the repo overview and command surface
+- `docs/getting-started.md` for bring-up workflow
+- `stacks/cerberus/reverse_proxy/README.md` for edge routing details
+- `stacks/cerberus/headscale_vpn/README.md` for tailnet stack details

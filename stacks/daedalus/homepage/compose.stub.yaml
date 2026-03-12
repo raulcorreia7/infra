@@ -1,0 +1,8 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    # internal only, expose via reverse_proxy
+    # volumes:
+    #   - ./config:/app/config
+    # environment:
+    #   HOMEPAGE_ALLOWED_HOSTS: homepage.home.arpa

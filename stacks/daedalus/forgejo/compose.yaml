@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${FORGEJO_DB_NAME}
+      POSTGRES_USER: ${FORGEJO_DB_USER}
+      POSTGRES_PASSWORD: ${FORGEJO_DB_PASSWORD}
+      TZ: ${TZ}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:13-rootless
+    restart: unless-stopped
+    user: 1000:1000
+    depends_on:
+      - postgres
+    environment:
+      USER_UID: 1000
+      USER_GID: 1000
+      TZ: ${TZ}
+    ports:
+      # Required for Git over SSH. Web traffic stays behind reverse_proxy.
+      - "${FORGEJO_SSH_PORT}:2222"
+    networks:
+      - default
+      - edge
+    volumes:
+      - ./data/forgejo:/var/lib/gitea
+      - ./config:/etc/gitea
+      - /etc/localtime:/etc/localtime:ro
+    # Testing only. Keep Forgejo web internal and expose it through reverse_proxy.
+    # ports:
+    #   - "3000:3000"
+
+networks:
+  edge:
+    external: true
+    name: ${EDGE_NETWORK}

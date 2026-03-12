@@ -14,14 +14,18 @@ Repo-specific guidance for agents working in this infra repo.
 - One folder per enabled stack inside each host
 - A stack is enabled when `stacks/<host>/<stack>/compose.yaml` exists
 - Current active public host: `stacks/cerberus/`
-- Placeholder hosts: `stacks/athena/`, `stacks/chronos/`
+- Hypervisor host: `stacks/athena/`
+- Docker app host: `stacks/daedalus/`
+- Placeholder storage host: `stacks/chronos/`
 
 ## Source Of Truth
 
 - `stacks/<host>/.env` is the source of truth for host-specific values
+- `setup` syncs `stacks/<host>/.env` into each enabled stack as a local `.env` for direct Compose use
 - `*.template*` files render once into local config files during `setup`
 - `*.example*` files copy once for static starter files during `setup`
 - `setup` must never overwrite existing rendered or copied local files
+- the per-stack `.env` file is the one exception because it is a generated sync artifact
 
 ## Runtime Rule
 
@@ -29,6 +33,8 @@ Repo-specific guidance for agents working in this infra repo.
 - Keep application services internal by default
 - Direct port publishing is only for temporary testing
 - Shared Docker network name comes from `EDGE_NETWORK`
+- Generic `bin/` scripts target Compose hosts like `cerberus` and `daedalus`
+- Keep Proxmox-specific concerns in `stacks/athena/`
 
 ## Data And State
 
@@ -49,24 +55,25 @@ setup -> validate-config -> up -> health
 
 Main commands:
 
-- `bash bin/setup.sh <host>`
-- `bash bin/validate-config.sh <host>`
-- `bash bin/up.sh <host>`
-- `bash bin/health.sh <host>`
-- `bash bin/down.sh <host>`
-- `bash bin/teardown.sh <host>`
-- `bash bin/teardown.sh --remove <host>`
+- `./bin/setup.sh <host>`
+- `./bin/validate-config.sh <host>`
+- `./bin/up.sh <host>`
+- `./bin/health.sh <host>`
+- `./bin/down.sh <host>`
+- `./bin/teardown.sh <host>`
+- `./bin/teardown.sh --remove <host>`
 
 Quality commands:
 
-- `bash bin/fmt.sh`
-- `bash bin/lint.sh`
+- `./bin/fmt.sh`
+- `./bin/lint.sh`
 
 ## Stack-Local Behavior
 
 - Generic lifecycle stays in `bin/`
 - Stack-specific behavior stays inside the stack directory
 - If a stack needs follow-up work after `up`, use `stack-up.sh`
+- If a stack needs runtime checks beyond `docker compose ps`, use `stack-health.sh`
 - Current example: `stacks/cerberus/headscale_vpn/stack-up.sh`
 
 ## Version Policy

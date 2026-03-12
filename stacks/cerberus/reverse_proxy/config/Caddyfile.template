@@ -7,3 +7,9 @@ ${PUBLIC_FQDN} {
 		reverse_proxy headscale:8080
 	}
 }
+
+# Future homelab services can also be exposed here once Cerberus can reach the
+# private origin over Tailscale or another routed network path.
+# jellyfin.raulcorreia.dev {
+# 	reverse_proxy 192.168.100.10:8096
+# }

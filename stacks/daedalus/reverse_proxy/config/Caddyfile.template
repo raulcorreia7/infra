@@ -1,0 +1,15 @@
+${KOMODO_HOST} {
+	tls internal
+	reverse_proxy komodo:9120
+}
+
+${FORGEJO_HOST} {
+	tls internal
+	reverse_proxy forgejo:3000
+}
+
+# Future services stay internal and should be exposed here when implemented.
+# ${HOMEPAGE_HOST} {
+# 	tls internal
+# 	reverse_proxy homepage:3000
+# }

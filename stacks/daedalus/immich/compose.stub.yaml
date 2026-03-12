@@ -1,0 +1,9 @@
+services:
+  immich:
+    image: ghcr.io/immich-app/immich-server:release
+  machine-learning:
+    image: ghcr.io/immich-app/immich-machine-learning:release
+  postgres:
+    image: postgres:17
+  redis:
+    image: redis:7

@@ -1,0 +1,6 @@
+services:
+  runner:
+    image: data.forgejo.org/forgejo/runner:latest
+  docker:
+    image: docker:dind
+    # privileged sidecar for Docker-based workflows

@@ -65,7 +65,7 @@ render_templates_for_stack() {
 		if grep -q '\${[A-Z0-9_][A-Z0-9_]*}' "$temp_target"; then
 			fail "unresolved template variables in ${template_file#"${ROOT_DIR}/"}"
 		fi
-	done < <(find "$stack_directory" -type f \( -name '*.template' -o -name '*.template.yaml' \) | sort)
+	done < <(find "$stack_directory" -type f \( -name '*.template' -o -name '*.template.*' \) | sort)
 }
 
 validate_compose_files() {
@@ -77,7 +77,7 @@ validate_compose_files() {
 
 validate_caddy_config() {
 	local rendered_caddy="${TEMP_DIR}/stacks/${HOST_NAME}/reverse_proxy/config/Caddyfile"
-	[[ -f "$rendered_caddy" ]] || return
+	[[ -f "$rendered_caddy" ]] || return 0
 
 	docker run --rm \
 		-v "$rendered_caddy:/etc/caddy/Caddyfile:ro" \
@@ -87,7 +87,7 @@ validate_caddy_config() {
 
 validate_headscale_config() {
 	local rendered_config="${TEMP_DIR}/stacks/${HOST_NAME}/headscale_vpn/config/headscale/config.yaml"
-	[[ -f "$rendered_config" ]] || return
+	[[ -f "$rendered_config" ]] || return 0
 
 	docker run --rm \
 		-v "$rendered_config:/etc/headscale/config.yaml:ro" \
@@ -101,14 +101,20 @@ main() {
 		usage
 		return
 	fi
+	set_host_paths
+	load_validation_env
+	load_enabled_stacks
+
+	if [[ "${#ENABLED_STACKS[@]}" -eq 0 ]]; then
+		validate_shell_syntax
+		printf 'no enabled compose stacks for host %s\n' "$HOST_NAME"
+		return
+	fi
 
 	require_command docker
 	require_command envsubst
 	require_command openssl
 	require_docker_compose
-	set_host_paths
-	load_validation_env
-	load_enabled_stacks
 	TEMP_DIR="$(mktemp -d)"
 
 	validate_shell_syntax

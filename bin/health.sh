@@ -26,6 +26,17 @@ print_heading() {
 	printf '\n== %s ==\n' "$1"
 }
 
+run_stack_health_script() {
+	local stack_name="$1"
+	local script_path=""
+
+	script_path="$(stack_script_path "$stack_name" "stack-health.sh")"
+	[[ -x "$script_path" ]] || return 0
+
+	print_heading "${stack_name}: stack health"
+	"$script_path"
+}
+
 verify_stack_status() {
 	local stack_name="$1"
 	print_heading "${stack_name}: docker compose ps"
@@ -56,7 +67,7 @@ verify_reverse_proxy_stack() {
 }
 
 verify_public_endpoints() {
-	[[ -n "${PUBLIC_FQDN:-}" ]] || fail "PUBLIC_FQDN must be set in ${ENV_FILE}"
+	[[ -n "${PUBLIC_FQDN:-}" ]] || return
 
 	print_heading "curl: https://${PUBLIC_FQDN}/health"
 	curl -I --fail --silent --show-error "https://${PUBLIC_FQDN}/health"
@@ -76,9 +87,6 @@ main() {
 		exit 1
 	fi
 
-	require_command curl
-	require_command docker
-	require_docker_compose
 	set_host_paths
 	require_local_env_file
 	load_host_env
@@ -89,9 +97,17 @@ main() {
 		return
 	fi
 
+	require_command curl
+	require_command docker
+	require_docker_compose
+
 	local stack_name=""
 	for stack_name in "${ENABLED_STACKS[@]}"; do
 		verify_stack_status "$stack_name"
+	done
+
+	for stack_name in "${ENABLED_STACKS[@]}"; do
+		run_stack_health_script "$stack_name"
 	done
 
 	verify_headscale_stack

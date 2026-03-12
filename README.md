@@ -1,65 +1,102 @@
 # Infra
 
-Small homelab infra repo built around Docker Compose, Caddy, and host-driven
+Small homelab infra repo built around Docker Compose, Caddy, and host-first
 rendered config.
 
-## What This Repo Is
+Keep it boring:
 
-- One top-level folder per host under `stacks/`
-- One folder per service stack inside each host
-- `cerberus` is the current public edge
-- `reverse_proxy` fronts public traffic
-- `headscale_vpn` runs Headscale + Headplane
+- host env is the source of truth
+- setup renders/copies local files once
+- after that, plain `docker compose` should still work inside each stack
 
-## Quick Start
+## Table Of Contents
 
-```bash
-bash bin/setup.sh cerberus
-bash bin/validate-config.sh cerberus
-bash bin/up.sh cerberus
-bash bin/health.sh cerberus
-```
+- [What This Repo Does](#what-this-repo-does)
+- [Quick Start](#quick-start)
+- [Host Model](#host-model)
+- [Commands](#commands)
+- [Documentation](#documentation)
 
-Stop everything:
+## What This Repo Does
 
-```bash
-bash bin/down.sh cerberus
-```
+- Keeps infra grouped by host under `stacks/`
+- Enables a stack only when `stacks/<host>/<stack>/compose.yaml` exists
+- Uses `stacks/<host>/.env` as the source of truth for host values
+- Renders local config once during `setup` and does not overwrite existing files
 
-Remove stack resources and the shared edge network when unused:
-
-```bash
-bash bin/teardown.sh cerberus
-bash bin/teardown.sh --remove cerberus
-```
-
-## Rule Of Thumb
+Rule of thumb:
 
 ```text
 public traffic -> Caddy -> internal service
 ```
 
-Keep app services internal by default. Only expose direct ports for temporary
-testing.
+## Quick Start
+
+Bring up the current public host:
+
+```bash
+./bin/setup.sh cerberus
+./bin/validate-config.sh cerberus
+./bin/up.sh cerberus
+./bin/health.sh cerberus
+```
+
+For local iteration, `setup` also syncs the host env into each enabled stack so
+plain Compose still works:
+
+```bash
+cp stacks/daedalus/.env.example stacks/daedalus/.env
+./bin/setup.sh daedalus
+cd stacks/daedalus/komodo
+docker compose -f compose.yaml -f compose.local.yaml up -d
+```
+
+`compose.local.yaml` is tracked for stacks that benefit from easy local
+debugging.
+
+Stop or remove it:
+
+```bash
+./bin/down.sh cerberus
+./bin/teardown.sh cerberus
+./bin/teardown.sh --remove cerberus
+```
+
+## Host Model
+
+- `cerberus` is the current public edge host
+- `athena` is the Proxmox hypervisor host
+- `daedalus` is the internal Docker app host VM
+- `chronos` is the storage placeholder host
+
+The source of truth stays in `stacks/<host>/.env`. `setup` copies that env into
+each enabled stack as a local `.env` so direct `docker compose` usage stays
+simple and predictable.
 
 ## Commands
 
-- `bash bin/setup.sh <host>` bootstrap host config and runtime directories
-- `bash bin/install-ssh-key.sh [user@]host` install your local public SSH key on a server
-- `bash bin/up.sh <host>` start enabled stacks
-- `bash bin/down.sh <host>` stop enabled stacks
-- `bash bin/teardown.sh <host>` remove stack resources and clean up unused host network state
-- `bash bin/teardown.sh --remove <host>` also remove stack images and clear rendered runtime files
-- `bash bin/logs.sh <host> [stack]` inspect logs
-- `bash bin/health.sh <host>` run post-start health checks
-- `bash bin/fmt.sh` format shell scripts
-- `bash bin/lint.sh` lint shell scripts
-- `bash bin/validate-config.sh [host]` validate templates and stack config
+| Command | Purpose |
+| --- | --- |
+| `./bin/setup.sh <host>` | Render missing local config and create runtime directories |
+| `./bin/validate-config.sh <host>` | Validate templates and stack config |
+| `./bin/up.sh <host>` | Start enabled stacks |
+| `./bin/health.sh <host>` | Run host and stack health checks |
+| `./bin/down.sh <host>` | Stop enabled stacks |
+| `./bin/teardown.sh <host>` | Remove stack resources and unused host network state |
+| `./bin/teardown.sh --remove <host>` | Also remove images and rendered runtime files |
+| `./bin/logs.sh <host> [stack]` | Inspect logs |
+| `./bin/install-ssh-key.sh [user@]host` | Install your local public SSH key on a server |
+| `./bin/fmt.sh` | Format shell scripts |
+| `./bin/lint.sh` | Lint shell scripts |
 
-## Docs
+## Documentation
 
-- `docs/index.md` docs map
-- `docs/getting-started.md` setup flow, host model, and config rendering
-- `docs/homelab.md` homelab and network topology
-- `stacks/cerberus/headscale_vpn/README.md` Headscale and Headplane notes
-- `stacks/cerberus/reverse_proxy/README.md` Caddy and routing notes
+Start at `docs/index.md`.
+
+- `docs/index.md` - doc map and navigation hub
+- `docs/getting-started.md` - setup flow and host workflow
+- `docs/homelab.md` - topology, routing, and network notes
+- `stacks/athena/README.md` - Athena host notes
+- `stacks/daedalus/README.md` - Daedalus host notes and planned stack inventory
+- `stacks/cerberus/reverse_proxy/README.md` - Cerberus Caddy notes
+- `stacks/cerberus/headscale_vpn/README.md` - Cerberus Headscale notes
