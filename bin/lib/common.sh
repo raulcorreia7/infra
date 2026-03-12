@@ -1,35 +1,35 @@
 # shellcheck shell=bash disable=SC2016,SC2153
 
 fail() {
-	printf 'error: %s\n' "$1" >&2
+	printf -- 'error: %s\n' "$1" >&2
 	exit 1
 }
 
 print_section() {
-	printf '\n== %s ==\n' "$1"
+	printf -- '\n== %s ==\n' "$1"
 }
 
 log_step() {
-	printf '-> %s\n' "$1"
+	printf -- '-> %s\n' "$1"
 }
 
 log_ok() {
-	printf 'ok: %s\n' "$1"
+	printf -- 'ok: %s\n' "$1"
 }
 
 log_warn() {
-	printf 'warn: %s\n' "$1" >&2
+	printf -- 'warn: %s\n' "$1" >&2
 }
 
 log_fail() {
-	printf 'fail: %s\n' "$1" >&2
+	printf -- 'fail: %s\n' "$1" >&2
 }
 
 trim() {
 	local value="$1"
 	value="${value#"${value%%[![:space:]]*}"}"
 	value="${value%"${value##*[![:space:]]}"}"
-	printf '%s' "$value"
+	printf -- '%s' "$value"
 }
 
 require_command() {
@@ -56,7 +56,7 @@ list_existing_shell_files() {
 
 	while IFS= read -r shell_file; do
 		[[ -f "${ROOT_DIR}/${shell_file}" ]] || continue
-		printf '%s\n' "$shell_file"
+		printf -- '%s\n' "$shell_file"
 	done < <(git -C "$ROOT_DIR" ls-files --cached --others --exclude-standard '*.sh')
 }
 
@@ -153,11 +153,11 @@ host_uses_env_key() {
 }
 
 stack_dir() {
-	printf '%s/%s' "$HOST_DIR" "$1"
+	printf -- '%s/%s' "$HOST_DIR" "$1"
 }
 
 stack_script_path() {
-	printf '%s/%s' "$(stack_dir "$1")" "$2"
+	printf -- '%s/%s' "$(stack_dir "$1")" "$2"
 }
 
 run_compose() {
@@ -229,10 +229,10 @@ target_path_for_example() {
 
 	case "$example_file" in
 	*.example.*)
-		printf '%s' "${example_file/.example./.}"
+		printf -- '%s' "${example_file/.example./.}"
 		;;
 	*.example)
-		printf '%s' "${example_file%.example}"
+		printf -- '%s' "${example_file%.example}"
 		;;
 	*)
 		fail "unsupported example file: ${example_file}"
@@ -245,10 +245,10 @@ target_path_for_template() {
 
 	case "$template_file" in
 	*.template.*)
-		printf '%s' "${template_file/.template./.}"
+		printf -- '%s' "${template_file/.template./.}"
 		;;
 	*.template)
-		printf '%s' "${template_file%.template}"
+		printf -- '%s' "${template_file%.template}"
 		;;
 	*)
 		fail "unsupported template file: ${template_file}"
