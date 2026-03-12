@@ -7,6 +7,7 @@ This is the shortest path from a fresh clone to a running host.
 - [Workflow](#workflow)
 - [Bring Up A Host](#bring-up-a-host)
 - [Host Model](#host-model)
+- [Remote Deploy](#remote-deploy)
 - [Current Hosts](#current-hosts)
 - [Add A Host](#add-a-host)
 - [Athena References](#athena-references)
@@ -53,6 +54,20 @@ docker compose -f compose.yaml -f compose.local.yaml up -d
 Stacks that benefit from easy local debugging can ship a tracked
 `compose.local.yaml`. Use it explicitly when you want local ports or other
 developer-friendly overrides.
+
+## Remote Deploy
+
+Use SSH plus `rsync` to push the repo to a server without cloning there:
+
+```bash
+./bin/install-ssh-key.sh root@cerberus
+./bin/sync.sh root@cerberus infra
+./bin/deploy.sh root@cerberus cerberus infra
+```
+
+`sync.sh` copies tracked repo files and skips remote-local secrets, rendered
+config, and runtime data. Keep files like `stacks/<host>/.env`, `dns/.env`, and
+`dns/creds.json` on the remote host.
 
 ## Host Model
 

@@ -9,11 +9,16 @@ ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 FAIL_COUNT=0
 WARN_COUNT=0
 
+HOST_NAME="${1:-}"
+HOST_DIR=""
+ENV_FILE=""
+
 usage() {
 	cat <<'EOF'
-Usage: bin/doctor.sh
+Usage: bin/doctor.sh [host]
 
 Check whether the repo has the tools and local files needed for normal use.
+When a host is provided, also compare its local .env against .env.example.
 
 Options:
   -h, --help Show this help.
@@ -128,7 +133,7 @@ check_dns_files() {
 }
 
 main() {
-	if is_help_flag "${1:-}"; then
+	if is_help_flag "$HOST_NAME"; then
 		usage
 		return
 	fi
@@ -148,6 +153,17 @@ main() {
 	printf '\n== dns ==\n'
 	check_dns_tool
 	check_dns_files
+
+	if [[ -n "$HOST_NAME" ]]; then
+		printf '\n== host ==\n'
+		set_host_paths
+		if [[ -f "$ENV_FILE" ]]; then
+			report_ok "${ENV_FILE#"${ROOT_DIR}/"} present"
+			warn_missing_env_example_keys
+		else
+			report_warn "missing ${ENV_FILE#"${ROOT_DIR}/"}; copy ${HOST_DIR#"${ROOT_DIR}/"}/.env.example"
+		fi
+	fi
 
 	printf '\nsummary: %s failure(s), %s warning(s)\n' "$FAIL_COUNT" "$WARN_COUNT"
 	if [[ "$FAIL_COUNT" -gt 0 ]]; then

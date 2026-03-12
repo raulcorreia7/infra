@@ -62,6 +62,7 @@ render_templates_for_stack() {
 		temp_target="${TEMP_DIR}/${target_file#"${ROOT_DIR}/"}"
 		mkdir -p "$(dirname -- "$temp_target")"
 		render_template_to_file "$template_file" "$temp_target"
+		# shellcheck disable=SC2016
 		if grep -q '\${[A-Z0-9_][A-Z0-9_]*}' "$temp_target"; then
 			fail "unresolved template variables in ${template_file#"${ROOT_DIR}/"}"
 		fi
@@ -103,6 +104,7 @@ main() {
 	fi
 	set_host_paths
 	load_validation_env
+	warn_missing_env_example_keys
 	load_enabled_stacks
 
 	if [[ "${#ENABLED_STACKS[@]}" -eq 0 ]]; then

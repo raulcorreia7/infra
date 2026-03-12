@@ -1,3 +1,5 @@
+# shellcheck shell=bash disable=SC2016,SC2153
+
 fail() {
 	printf 'error: %s\n' "$1" >&2
 	exit 1
@@ -57,7 +59,26 @@ load_host_env() {
 	set -a
 	# shellcheck disable=SC1090
 	. "$ENV_FILE"
+	if [[ -z "${PUBLIC_FQDN_COMPAT:-}" && -n "${PUBLIC_FQDN:-}" ]]; then
+		PUBLIC_FQDN_COMPAT="$PUBLIC_FQDN"
+		export PUBLIC_FQDN_COMPAT
+	fi
 	set +a
+}
+
+warn_missing_env_example_keys() {
+	local example_file="${HOST_DIR}/.env.example"
+	local key=""
+
+	[[ -f "$example_file" ]] || return
+	[[ -f "$ENV_FILE" ]] || return
+
+	while IFS= read -r key; do
+		[[ -n "$key" ]] || continue
+		if ! grep -Eq "^${key}=" "$ENV_FILE"; then
+			printf 'warning: %s is missing %s (present in .env.example)\n' "${ENV_FILE#"${ROOT_DIR}/"}" "$key" >&2
+		fi
+	done < <(grep -E '^[A-Z0-9_]+=' "$example_file" | cut -d '=' -f 1)
 }
 
 load_enabled_stacks() {

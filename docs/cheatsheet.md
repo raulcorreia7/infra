@@ -53,6 +53,13 @@ cp stacks/cerberus/.env.example stacks/cerberus/.env
 Use it to create and host `daedalus`, then run the generic Compose workflow on
 `daedalus`, not on `athena` itself.
 
+## Remote Deploy
+
+```bash
+./bin/sync.sh root@cerberus infra
+./bin/deploy.sh root@cerberus cerberus infra
+```
+
 ## Stop And Cleanup
 
 Stop a host:
