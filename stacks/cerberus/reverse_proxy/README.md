@@ -38,8 +38,8 @@ Recommended current value:
 
 - `PUBLIC_FQDN=tailscale.cerberus.raulcorreia.dev`
 
-The `/admin` prefix is preserved when proxying to Headplane, so Headplane must
-be prepared to serve that path as-is.
+This keeps the public Headscale control plane on a dedicated public subdomain
+instead of mixing it into the main Cerberus hostname.
 
 ## Storage Ownership
 
@@ -64,6 +64,10 @@ routing logic stays easy to read.
 Cerberus can also proxy selected homelab services later. For example,
 `jellyfin.raulcorreia.dev` can point to a private service on `daedalus` or
 another internal host as long as Cerberus has a reachable path to that origin.
+
+Cloudflare should only hold the public `*.raulcorreia.dev` records that point to
+Cerberus. Private `*.home.arpa` access stays on the tailnet and homelab DNS
+path.
 
 For public hostnames like `tailscale.cerberus.raulcorreia.dev` or future
 `jellyfin.raulcorreia.dev`, add Cloudflare DNS records that point to the

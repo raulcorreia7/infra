@@ -93,6 +93,10 @@ For topology and routing, use `docs/homelab.md`.
 `athena` remains the hypervisor. Create `daedalus` with the upstream Docker VM
 helper, then install Komodo inside the VM.
 
+For remote homelab access through the Athena subnet router, remember that Linux
+clients need `tailscale set --accept-routes`, while other major Tailscale
+clients accept subnet routes by default.
+
 - Docker VM helper: `https://community-scripts.org/scripts/docker-vm`
 - Komodo helper: `https://community-scripts.org/scripts/komodo`
 - Alpine LXC helper: `https://community-scripts.org/scripts/alpine`

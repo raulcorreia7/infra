@@ -61,7 +61,7 @@ Important:
 - tracked templates are `config.template.yaml` files
 - rendered local files are plain YAML files mounted into the containers
 - re-running setup is safe and does not overwrite existing local config files
-- keep Headplane `server.base_url` as a full external URL without `/admin`
+- keep Headplane `server.base_url` as the full external host URL
 
 ## Required Environment
 
@@ -104,6 +104,16 @@ docker compose -f compose.yaml -f compose.local.yaml up -d
 Recommended current value:
 
 - `PUBLIC_FQDN=tailscale.cerberus.raulcorreia.dev`
+
+Remote clients on public networks should use `PUBLIC_FQDN` for the Headscale
+control plane, then use the advertised subnet route plus `home.arpa` DNS to
+reach private homelab machines.
+
+Client note:
+
+- Windows, macOS, iOS, Android, and tvOS accept subnet routes by default
+- Linux clients need `tailscale set --accept-routes`
+- `home.arpa` hostnames only work if your private DNS server contains those records
 
 ## Admin Tasks
 

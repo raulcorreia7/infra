@@ -25,6 +25,16 @@ It is not the main Docker Compose app runtime. Its current role is:
 - current subnet route advertised from that LXC: `192.168.100.0/24`
 - future Docker app workloads should live on the `daedalus` VM, not directly on `athena`
 
+For transparent remote access, the path is:
+
+```text
+laptop on public network
+  -> Headscale on Cerberus
+  -> subnet route 192.168.100.0/24
+  -> Athena Tailscale LXC
+  -> home.arpa names and private LAN hosts
+```
+
 ## VM Plan
 
 Create `daedalus` with the Proxmox VE Docker VM helper in Advanced mode.
@@ -46,6 +56,16 @@ Then install Komodo inside the VM:
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/addon/komodo.sh)"
 ```
+
+If the subnet router is healthy and your client accepts subnet routes, private
+hostnames like `athena.home.arpa`, `daedalus.home.arpa`, and `talos.home.arpa`
+should work from outside the house.
+
+Platform note:
+
+- Windows, macOS, iOS, Android, and tvOS accept subnet routes by default
+- Linux clients need `tailscale set --accept-routes`
+- `home.arpa` names still require your private DNS server to contain those records
 
 ## Durable Rule
 

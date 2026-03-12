@@ -30,7 +30,7 @@ Use this page as the navigation hub for the repo docs.
 
 | File | Purpose |
 | --- | --- |
-| `stacks/athena/README.md` | Proxmox and VM planning notes |
+| `stacks/athena/README.md` | Proxmox, subnet-router, and VM planning notes |
 | `stacks/daedalus/README.md` | Internal Docker app-host notes |
 
 ## Active Stack Docs

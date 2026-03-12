@@ -136,8 +136,23 @@ Expected result:
 
 - `athena.home.arpa` resolves privately
 - `daedalus.home.arpa` resolves privately
+- `talos.home.arpa` resolves privately
 - `ssh root@athena.home.arpa` works over the tailnet path
 - `ping 192.168.100.x` works once subnet routes are accepted
+
+Requirements:
+
+- the laptop is connected to Headscale
+- subnet routes are accepted
+- the Athena Tailscale LXC advertises `192.168.100.0/24`
+- `home.arpa` is resolved through `192.168.100.1`
+- your local DNS server actually knows records like `athena.home.arpa`, `daedalus.home.arpa`, and `talos.home.arpa`
+
+Client note from the Tailscale docs:
+
+- Windows, macOS, iOS, Android, and tvOS accept subnet routes by default
+- Linux clients must explicitly run `tailscale set --accept-routes`
+- MagicDNS handles tailnet names automatically, while `home.arpa` still depends on your private DNS resolver
 
 ## Notes
 
