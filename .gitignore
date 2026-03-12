@@ -17,5 +17,3 @@ stacks/**/config/**/config.yaml
 stacks/**/data/**
 !stacks/**/data/
 !stacks/**/data/.gitkeep
-!stacks/**/data/**/
-!stacks/**/data/**/.gitkeep

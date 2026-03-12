@@ -6,16 +6,23 @@ services:
       POSTGRES_DB: ${FORGEJO_DB_NAME}
       POSTGRES_USER: ${FORGEJO_DB_USER}
       POSTGRES_PASSWORD: ${FORGEJO_DB_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
       TZ: ${TZ}
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${FORGEJO_DB_USER} -d ${FORGEJO_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   forgejo:
     image: codeberg.org/forgejo/forgejo:13-rootless
     restart: unless-stopped
     user: 1000:1000
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       USER_UID: 1000
       USER_GID: 1000
@@ -28,7 +35,7 @@ services:
       - edge
     volumes:
       - ./data/forgejo:/var/lib/gitea
-      - ./config:/etc/gitea
+      - ./config/app.ini:/var/lib/gitea/custom/conf/app.ini:ro
       - /etc/localtime:/etc/localtime:ro
     # Testing only. Keep Forgejo web internal and expose it through reverse_proxy.
     # ports:

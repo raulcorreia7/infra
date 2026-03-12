@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="${SCRIPT_DIR}/../.env"
+
 SEED_USERS_RAW="${HEADSCALE_SEED_USERS:-}"
 declare -a SEED_USERS=()
 
@@ -78,6 +81,14 @@ main() {
 	if is_help_request "${1:-}"; then
 		usage
 		return
+	fi
+
+	if [[ -f "$ENV_FILE" ]]; then
+		set -a
+		# shellcheck disable=SC1090
+		. "$ENV_FILE"
+		set +a
+		SEED_USERS_RAW="${HEADSCALE_SEED_USERS:-}"
 	fi
 
 	load_seed_users

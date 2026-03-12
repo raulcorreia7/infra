@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="${SCRIPT_DIR}/../.env"
 
 usage() {
 	cat <<'EOF'
@@ -25,6 +26,13 @@ is_help_request() {
 if is_help_request "${1:-}"; then
 	usage
 	exit 0
+fi
+
+if [[ -f "$ENV_FILE" ]]; then
+	set -a
+	# shellcheck disable=SC1090
+	. "$ENV_FILE"
+	set +a
 fi
 
 if [[ -x "${SCRIPT_DIR}/seed-users.sh" ]]; then
