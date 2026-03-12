@@ -14,20 +14,21 @@ This is the shortest path from a fresh clone to a running host.
 ## Workflow
 
 ```text
-ssh key -> host env -> setup -> validate-config -> review -> up -> health
-                                                      \-> teardown
+ssh key -> doctor -> host env -> setup -> validate-config -> review -> up -> health
+                                                                \-> teardown
 ```
 
 ## Bring Up A Host
 
 1. Copy `stacks/<host>/.env.example` to `stacks/<host>/.env`.
 2. Fill in the host values.
-3. Confirm the host has the stack folders you want enabled.
-4. Run `./bin/setup.sh <host>`.
-5. Run `./bin/validate-config.sh <host>`.
-6. Review the rendered local config files.
-7. Run `./bin/up.sh <host>`.
-8. Run `./bin/health.sh <host>`.
+3. Run `./bin/doctor.sh`.
+4. Confirm the host has the stack folders you want enabled.
+5. Run `./bin/setup.sh <host>`.
+6. Run `./bin/validate-config.sh <host>`.
+7. Review the rendered local config files.
+8. Run `./bin/up.sh <host>`.
+9. Run `./bin/health.sh <host>`.
 
 For cleanup:
 
@@ -73,7 +74,8 @@ duplicated here.
 
 Current name split:
 
-- `tailscale.cerberus.raulcorreia.dev` for the public Headscale entrypoint
+- `vpn.raulcorreia.dev` for the public Headscale entrypoint
+- `tailscale.cerberus.raulcorreia.dev` as a temporary compatibility alias
 - `*.home.arpa` for private host and service access
 - future public `*.raulcorreia.dev` apps through Cerberus
 

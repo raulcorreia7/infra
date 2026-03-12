@@ -42,6 +42,7 @@ env:
 This stack uses these host env values when rendering:
 
 - `PUBLIC_FQDN`
+- `PUBLIC_FQDN_COMPAT` temporary compatibility hostname for the reverse proxy
 - `TAILNET_DOMAIN`
 - `HOME_DOMAIN`
 - `HOME_DNS_RESOLVER`
@@ -103,11 +104,13 @@ docker compose -f compose.yaml -f compose.local.yaml up -d
 
 Recommended current value:
 
-- `PUBLIC_FQDN=tailscale.cerberus.raulcorreia.dev`
+- `PUBLIC_FQDN=vpn.raulcorreia.dev`
+- `PUBLIC_FQDN_COMPAT=tailscale.cerberus.raulcorreia.dev`
 
 Remote clients on public networks should use `PUBLIC_FQDN` for the Headscale
 control plane, then use the advertised subnet route plus `home.arpa` DNS to
-reach private homelab machines.
+reach private homelab machines. The compatibility hostname can stay live in
+Caddy and Cloudflare for older clients until you remove it.
 
 Client note:
 

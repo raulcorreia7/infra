@@ -74,6 +74,14 @@ verify_public_endpoints() {
 
 	print_heading "curl: https://${PUBLIC_FQDN}/admin"
 	curl -I --fail --silent --show-error "https://${PUBLIC_FQDN}/admin"
+
+	if [[ -n "${PUBLIC_FQDN_COMPAT:-}" && "${PUBLIC_FQDN_COMPAT}" != "${PUBLIC_FQDN}" ]]; then
+		print_heading "curl: https://${PUBLIC_FQDN_COMPAT}/health"
+		curl -I --fail --silent --show-error "https://${PUBLIC_FQDN_COMPAT}/health"
+
+		print_heading "curl: https://${PUBLIC_FQDN_COMPAT}/admin"
+		curl -I --fail --silent --show-error "https://${PUBLIC_FQDN_COMPAT}/admin"
+	fi
 }
 
 main() {

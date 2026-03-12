@@ -32,7 +32,8 @@ public traffic -> Caddy -> internal service
                          |   raulcorreia.dev    |
                          '----------+-----------'
                                     |
-              tailscale.cerberus.raulcorreia.dev / 80,443
+              vpn.raulcorreia.dev / 80,443
+              tailscale.cerberus.raulcorreia.dev / 80,443 (compat)
                                     |
           .-------------------------v-------------------------.
           |                    cerberus VPS                   |
@@ -114,7 +115,8 @@ magic DNS      enabled
 ```text
 Cloudflare DNS only records:
 
-tailscale.cerberus.raulcorreia.dev  -> cerberus public IP
+vpn.raulcorreia.dev                 -> cerberus public IP
+tailscale.cerberus.raulcorreia.dev  -> compatibility alias to vpn.raulcorreia.dev
 future *.raulcorreia.dev services   -> cerberus public IP
 ```
 

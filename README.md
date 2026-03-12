@@ -36,6 +36,7 @@ public traffic -> Caddy -> internal service
 Bring up the current public host:
 
 ```bash
+./bin/doctor.sh
 ./bin/setup.sh cerberus
 ./bin/validate-config.sh cerberus
 ./bin/up.sh cerberus
@@ -72,7 +73,8 @@ Stop or remove it:
 
 Current public DNS split:
 
-- `tailscale.cerberus.raulcorreia.dev` -> Headscale and Headplane
+- `vpn.raulcorreia.dev` -> Headscale and Headplane
+- `tailscale.cerberus.raulcorreia.dev` -> temporary compatibility alias to `vpn.raulcorreia.dev`
 - `*.home.arpa` -> private hosts and services over the homelab/tailnet path
 - future public `*.raulcorreia.dev` apps -> Cerberus edge proxy
 
@@ -94,6 +96,9 @@ every stack.
 | `./bin/teardown.sh --remove <host>` | Also remove images and rendered runtime files |
 | `./bin/logs.sh <host> [stack]` | Inspect logs |
 | `./bin/install-ssh-key.sh [user@]host` | Install your local public SSH key on a server |
+| `./bin/install-dnscontrol.sh` | Install the repo-local DNSControl binary |
+| `./bin/dnscontrol <command>` | Run DNSControl from `dns/` with local env loading |
+| `./bin/doctor.sh` | Validate core repo, quality, and DNS tooling |
 | `./bin/fmt.sh` | Format shell scripts |
 | `./bin/lint.sh` | Lint shell scripts |
 

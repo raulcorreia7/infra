@@ -25,6 +25,8 @@ Use this page as the navigation hub for the repo docs.
 | `docs/cheatsheet.md` | Shortest practical command reference |
 | `docs/getting-started.md` | Setup flow, host model, and bring-up workflow |
 | `docs/homelab.md` | Topology, routing, and location map |
+| `dns/README.md` | DNSControl setup and Cloudflare zone workflow |
+| `dns/dnsconfig.js` | Source of truth for the Cloudflare zone |
 
 ## Host Docs
 

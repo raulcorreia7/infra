@@ -38,6 +38,7 @@ cp stacks/daedalus/.env.example stacks/daedalus/.env
 ## Cerberus Bring-Up
 
 ```bash
+./bin/doctor.sh
 cp stacks/cerberus/.env.example stacks/cerberus/.env
 ./bin/setup.sh cerberus
 ./bin/validate-config.sh cerberus

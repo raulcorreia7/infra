@@ -7,12 +7,18 @@
 stacks/*/.env
 !stacks/*/.env.example
 stacks/*/*/.env
+dns/.env
 
 # Rendered and copied local config
 stacks/**/config/Caddyfile
 stacks/**/config/policy.yaml
 stacks/**/config/**/config.yaml
+dns/creds.json
 
 # Generated stack state
 stacks/**/data/
 stacks/**/data/**
+
+# Repo-local tools
+tools/dnscontrol/*
+!tools/dnscontrol/.gitkeep

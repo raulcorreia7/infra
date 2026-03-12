@@ -29,17 +29,19 @@ network.
 
 ## Routing Model
 
-The rendered configuration uses one hostname from `PUBLIC_FQDN` and two routes:
+The rendered configuration uses the canonical hostname from `PUBLIC_FQDN`, keeps
+`PUBLIC_FQDN_COMPAT` as a temporary alias, and exposes two routes:
 
 - Requests for `/admin*` go to `headplane:3000`
 - All other requests go to `headscale:8080`
 
 Recommended current value:
 
-- `PUBLIC_FQDN=tailscale.cerberus.raulcorreia.dev`
+- `PUBLIC_FQDN=vpn.raulcorreia.dev`
+- `PUBLIC_FQDN_COMPAT=tailscale.cerberus.raulcorreia.dev`
 
-This keeps the public Headscale control plane on a dedicated public subdomain
-instead of mixing it into the main Cerberus hostname.
+This keeps the public Headscale control plane on a short dedicated hostname
+while leaving the previous hostname alive during the move.
 
 ## Storage Ownership
 
@@ -69,9 +71,9 @@ Cloudflare should only hold the public `*.raulcorreia.dev` records that point to
 Cerberus. Private `*.home.arpa` access stays on the tailnet and homelab DNS
 path.
 
-For public hostnames like `tailscale.cerberus.raulcorreia.dev` or future
-`jellyfin.raulcorreia.dev`, add Cloudflare DNS records that point to the
-Cerberus public IP.
+For public hostnames like `vpn.raulcorreia.dev`, the temporary
+`tailscale.cerberus.raulcorreia.dev` alias, or future `jellyfin.raulcorreia.dev`,
+add Cloudflare DNS records that point to the Cerberus public IP.
 
 ## Related Docs
 

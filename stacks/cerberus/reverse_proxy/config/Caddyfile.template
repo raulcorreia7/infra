@@ -1,4 +1,4 @@
-${PUBLIC_FQDN} {
+${PUBLIC_FQDN}, ${PUBLIC_FQDN_COMPAT} {
 	handle /admin* {
 		reverse_proxy headplane:3000
 	}
