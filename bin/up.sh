@@ -30,14 +30,15 @@ run_stack_up_script() {
 
 	[[ -x "$script_path" ]] || return 0
 
-	printf 'running %s stack-up script\n' "$stack_name"
+	log_step "running ${stack_name} stack-up script"
 	"$script_path"
 }
 
 start_stack() {
 	local stack_name="$1"
-	printf 'starting %s\n' "$stack_name"
-	run_compose "$stack_name" up -d
+	log_step "reconciling ${stack_name}"
+	run_compose "$stack_name" up -d --force-recreate
+	log_ok "${stack_name} is up"
 	run_stack_up_script "$stack_name"
 }
 
@@ -65,6 +66,9 @@ main() {
 	require_command docker
 	require_docker_compose
 
+	print_section "Up"
+	log_step "starting ${HOST_NAME}"
+
 	local stack_name=""
 	for stack_name in "${ENABLED_STACKS[@]}"; do
 		[[ "$stack_name" == "reverse_proxy" ]] || continue
@@ -75,6 +79,8 @@ main() {
 		[[ "$stack_name" == "reverse_proxy" ]] && continue
 		start_stack "$stack_name"
 	done
+
+	log_ok "host is up: ${HOST_NAME}"
 }
 
 main "$@"
