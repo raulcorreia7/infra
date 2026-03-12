@@ -15,5 +15,3 @@ stacks/**/config/**/config.yaml
 
 # Generated stack state
 stacks/**/data/**
-!stacks/**/data/
-!stacks/**/data/.gitkeep
